@@ -70,8 +70,8 @@ export function renderOverview(props: OverviewProps) {
             href="https://docs.clawd.bot/web/dashboard"
             target="_blank"
             rel="noreferrer"
-            title="Control UI auth docs (opens in new tab)"
-            >Docs: Control UI auth</a
+            title="控制界面身份验证文档（在新标签页中打开）"
+            >文档：控制界面身份验证</a
           >
         </div>
       </div>
@@ -153,7 +153,7 @@ export function renderOverview(props: OverviewProps) {
                 const v = (e.target as HTMLInputElement).value;
                 props.onPasswordChange(v);
               }}
-              placeholder="system or shared password"
+              placeholder="系统或共享密码"
             />
           </label>
           <label class="field">
@@ -215,14 +215,14 @@ export function renderOverview(props: OverviewProps) {
 
     <section class="grid grid-cols-3" style="margin-top: 18px;">
       <div class="card stat-card">
-        <div class="stat-label">Instances</div>
+        <div class="stat-label">实例</div>
         <div class="stat-value">${props.presenceCount}</div>
-        <div class="muted">Presence beacons in the last 5 minutes.</div>
+        <div class="muted">过去5分钟内的存在信标。</div>
       </div>
       <div class="card stat-card">
-        <div class="stat-label">Sessions</div>
+        <div class="stat-label">会话</div>
         <div class="stat-value">${props.sessionsCount ?? "n/a"}</div>
-        <div class="muted">Recent session keys tracked by the gateway.</div>
+        <div class="muted">网关跟踪的最近会话密钥。</div>
       </div>
       <div class="card stat-card">
         <div class="stat-label">定时任务</div>
@@ -238,22 +238,22 @@ export function renderOverview(props: OverviewProps) {
     </section>
 
     <section class="card" style="margin-top: 18px;">
-      <div class="card-title">Notes</div>
-      <div class="card-sub">Quick reminders for remote control setups.</div>
+      <div class="card-title">注意事项</div>
+      <div class="card-sub">远程控制设置的快速提醒。</div>
       <div class="note-grid" style="margin-top: 14px;">
         <div>
-          <div class="note-title">Tailscale serve</div>
+          <div class="note-title">Tailscale服务</div>
           <div class="muted">
-            Prefer serve mode to keep the gateway on loopback with tailnet auth.
+            优先使用服务模式，在回环接口上保持网关并使用尾网认证。
           </div>
         </div>
         <div>
-          <div class="note-title">Session hygiene</div>
-          <div class="muted">Use /new or sessions.patch to reset context.</div>
+          <div class="note-title">会话管理</div>
+          <div class="muted">使用 /new 或 sessions.patch 来重置上下文。</div>
         </div>
         <div>
-          <div class="note-title">Cron reminders</div>
-          <div class="muted">Use isolated sessions for recurring runs.</div>
+          <div class="note-title">定时任务提醒</div>
+          <div class="muted">对重复运行使用隔离会话。</div>
         </div>
       </div>
     </section>

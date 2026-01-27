@@ -36,8 +36,8 @@ export function renderSkills(props: SkillsProps) {
     <section class="card">
       <div class="row" style="justify-content: space-between;">
         <div>
-          <div class="card-title">Skills</div>
-          <div class="card-sub">Bundled, managed, and workspace skills.</div>
+          <div class="card-title">技能</div>
+          <div class="card-sub">捆绑、管理和工作区技能。</div>
         </div>
         <button class="btn" ?disabled=${props.loading} @click=${props.onRefresh}>
           ${props.loading ? "加载中…" : "刷新"}
@@ -85,8 +85,8 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
     ...skill.missing.os.map((o) => `os:${o}`),
   ];
   const reasons: string[] = [];
-  if (skill.disabled) reasons.push("disabled");
-  if (skill.blockedByAllowlist) reasons.push("blocked by allowlist");
+  if (skill.disabled) reasons.push("已禁用");
+  if (skill.blockedByAllowlist) reasons.push("被白名单阻止");
   return html`
     <div class="list-item">
       <div class="list-main">
@@ -99,7 +99,7 @@ function renderSkill(skill: SkillStatusEntry, props: SkillsProps) {
           <span class="chip ${skill.eligible ? "chip-ok" : "chip-warn"}>
             ${skill.eligible ? "符合条件" : "被阻止"}
           </span>
-          ${skill.disabled ? html`<span class="chip chip-warn">disabled</span>` : nothing}
+          ${skill.disabled ? html`<span class="chip chip-warn">已禁用</span>` : nothing}
         </div>
         ${missing.length > 0
           ? html`

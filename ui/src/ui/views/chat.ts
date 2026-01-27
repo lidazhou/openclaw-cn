@@ -204,7 +204,7 @@ export function renderChat(props: ChatProps) {
       aria-live="polite"
       @scroll=${props.onChatScroll}
     >
-      ${props.loading ? html`<div class="muted">Loading chat…</div>` : nothing}
+      ${props.loading ? html`<div class="muted">正在加载聊天…</div>` : nothing}
       ${repeat(buildChatItems(props), (item) => item.key, (item) => {
         if (item.kind === "reading-indicator") {
           return renderReadingIndicatorGroup(assistantIdentity);
