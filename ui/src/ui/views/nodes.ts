@@ -85,7 +85,7 @@ function renderDevices(props: NodesProps) {
       <div class="row" style="justify-content: space-between;">
         <div>
           <div class="card-title">Devices</div>
-          <div class="card-sub">Pairing requests + role tokens.</div>
+          <div class="card-sub">配对请求 + 角色令牌。</div>
         </div>
         <button class="btn" ?disabled=${props.devicesLoading} @click=${props.onDevicesRefresh}>
           ${props.devicesLoading ? "加载中…" : "刷新"}
@@ -181,7 +181,7 @@ function renderTokenRow(deviceId: string, token: DeviceTokenSummary, props: Node
           class="btn btn--sm"
           @click=${() => props.onDeviceRotate(deviceId, token.role, token.scopes)}
         >
-          Rotate
+          更新
         </button>
         ${token.revokedAtMs
           ? nothing
