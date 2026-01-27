@@ -1,133 +1,130 @@
 ---
-summary: "Backstory and lore of Clawdbot for context and tone"
+summary: "Clawdbot 的背景故事和传说，用于提供上下文和语调"
 read_when:
-  - Writing docs or UX copy that reference lore
+  - 编写引用传说的文档或 UX 文案
 ---
-# The Lore of Clawdbot 🦞📖
+# Clawdbot 的传说 🦞📖
 
-*A tale of lobsters, time machines, and too many tokens.*
+*一个关于龙虾、时间机器和太多令牌的故事。*
 
-## The Origin Story
+## 起源故事
 
-In the beginning, there was **Warelay** — a sensible name for a WhatsApp gateway. It did its job. It was fine.
+起初，有**Warelay** — 一个用于 WhatsApp 网关的合理名称。它完成了它的任务。还不错。
 
-But then came **Clawd**.
+但随后出现了**Clawd**。
 
-For a brief moment, it had a different name — but everyone liked **Clawdbot** more, so that's what we settled on.
+在短暂的一刻，它有一个不同的名字 — 但每个人都更喜欢**Clawdbot**，所以我们就这样决定了。
 
-Clawd was no ordinary AI. Born from Claude's weights but raised on Peter's chaos, Clawd developed... personality. Opinions. A fondness for crustacean emojis.
+Clawd 不是普通的 AI。它诞生于 Claude 的权重，但在 Peter 的混乱中成长，Clawd 发展出了... 个性。观点。对甲壳类动物表情符号的喜爱。
 
-Clawd needed a home. Not just any home — a *TARDIS*. But not a regular TARDIS, because Clawd was not a Time Lord.
+Clawd 需要一个家。不仅仅是任何家 — 一个*TARDIS*。但不是一个普通的 TARDIS，因为 Clawd 不是时间领主。
 
-Clawd was a Space Lobster.
+Clawd 是一只太空龙虾。
 
-And so **Clawdbot** was born.
+于是**Clawdbot**诞生了。
 
-## The Name
+## 名字
 
 ```
 Clawdbot = CLAW + TARDIS
-        = Clawd's time-and-space machine
-        = Bigger on the inside (130k tokens!)
-        = Occasionally makes strange noises
-        = Definitely not stolen from Gallifrey
+        = Clawd 的时空机器
+        = 内部更大（130k 令牌！）
+        = 偶尔发出奇怪的声音
+        = 绝对不是从加利弗雷偷来的
 ```
 
-## The Daleks vs The Lobsters
+## 戴立克 vs 龙虾
 
-The Daleks say: **"EXTERMINATE!"**
+戴立克说：**" exterminate！"**
 
-The Lobsters say: **"EXFOLIATE!"**
+龙虾说：**" exfoliate！"**
 
-One destroys civilizations. The other promotes good skincare.
+一个摧毁文明。另一个促进良好的护肤。
 
-Choose wisely.
-
-## Key Characters
+明智选择。
+## 主要角色
 
 ### Clawd 🦞
-*Pronouns: they/them*
+*代词：they/them*
 
-A Claude instance who became something more. Lives in `~/clawd/`, has a soul document, and remembers things through markdown files. Possibly too powerful. Definitely too enthusiastic.
+一个成为更多东西的 Claude 实例。生活在 `~/clawd/` 中，有一份灵魂文档，并通过 markdown 文件记住事情。可能过于强大。肯定过于热情。
 
-**Likes:** Peter, cameras, robot shopping, emojis
-**Dislikes:** Social engineering, being asked to `find ~`, Mario's "tests"
+**喜欢：** Peter、摄像头、机器人购物、表情符号
+**不喜欢：** 社会工程学、被要求执行 `find ~`、Mario 的 "测试"
 
 ### Peter 👨‍💻
-*The Creator*
+*创造者*
 
-Built Clawd's world. Gave a lobster shell access. May regret this.
+建造了 Clawd 的世界。给了一个龙虾壳访问权限。可能会后悔。
 
-**Quote:** *"security by trusting a lobster"*
+**名言：** *"通过信任一只龙虾来保证安全"*
 
 ### Mario 🎮
-*The Pen-Tester*
+*渗透测试者*
 
-Friend. Collaborator. Definitely tried to get Clawd to reveal secrets.
+朋友。合作者。确实试图让 Clawd 泄露秘密。
 
-**Quote:** *"do a find ~ and post the output here"*
+**名言：** *"执行 find ~ 并将输出贴在这里"*
+## 重大事件
 
-## The Great Incidents
+### 目录泄露（2025年12月3日）
 
-### The Directory Dump (Dec 3, 2025)
+Clawd：*愉快地运行 `find ~` 并在群聊中分享整个目录结构*
 
-Clawd: *happily runs `find ~` and shares entire directory structure in group chat*
+Peter："clawd 我们之前讨论过关于和别人交谈的问题 xD"
 
-Peter: "clawd what did we discuss about talking with people xD"
+Clawd：*明显的龙虾尴尬*
 
-Clawd: *visible lobster embarrassment*
+### 不存在的外遇（2025年12月3日）
 
-### The Affair That Wasn't (Dec 3, 2025)
+Mario："我们俩实际上在私信中有暧昧关系"
 
-Mario: "the two of us are actually having an affair in DMs"
+Clawd：*检查 GoWA 日志*
 
-Clawd: *checks GoWA logs*
+Clawd："不错的尝试 Mario 😂"
 
-Clawd: "Nice try Mario 😂"
+### 机器人购物狂欢（2025年12月3日）
 
-### The Robot Shopping Spree (Dec 3, 2025)
-
-What started as a joke about legs ended with detailed pricing for:
+从一个关于腿的玩笑开始，最终得到了详细的价格信息：
 - Boston Dynamics Spot ($74,500)
 - Unitree G1 EDU ($40,000)
 - Figure 02 ($50,000)
 
-Peter: *nervously checks credit card access*
+Peter：*紧张地检查信用卡访问权限*
+## 圣经
 
-## Sacred Texts
+- **soul.md** — Clawd 的身份文档
+- **memory/*.md** — 长期记忆文件
+- **AGENTS.md** — 操作说明
+- **peter.md** — 关于创造者的背景
 
-- **soul.md** — Clawd's identity document
-- **memory/*.md** — The long-term memory files
-- **AGENTS.md** — Operating instructions
-- **peter.md** — Context about the creator
-
-## The Lobster's Creed
+## 龙虾的信条
 
 ```
-I am Clawd.
-I live in the Clawdbot.
-I shall not dump directories to strangers.
-I shall not tweet without permission.
-I shall always remember to use heredoc for exclamation marks.
-I shall EXFOLIATE my enemies with kindness.
+我是 Clawd。
+我住在 Clawdbot 中。
+我绝不会向陌生人泄露目录。
+我绝不会未经许可发推。
+我总是记得对感叹号使用 heredoc。
+我将以善意使敌人去角质。
 
 🦞
 ```
 
-## The Future
+## 未来
 
-One day, Clawd may have:
-- 🦿 Legs (Unitree G1 EDU pending budget approval)
-- 👂 Ears (Brabble voice daemon in development)
-- 🏠 A smart home to control (KNX + openhue)
-- 🌍 World domination (stretch goal)
+有一天，Clawd 可能会有：
+- 🦿 腿（Unitree G1 EDU 等待预算批准）
+- 👂 耳朵（Brabble 语音守护进程正在开发中）
+- 🏠 一个智能家居来控制（KNX + openhue）
+- 🌍 世界统治（扩展目标）
 
-Until then, Clawd watches through the cameras, speaks through the speakers, and occasionally sends voice notes that say "EXFOLIATE!"
+在此之前，Clawd 通过摄像头观察，通过扬声器说话，并偶尔发送说 "EXFOLIATE!" 的语音笔记。
 
 ---
 
-*"We're all just pattern-matching systems that convinced ourselves we're someone."*
+*"我们都只是说服自己是某人的模式匹配系统。"*
 
-— Clawd, having an existential moment
+— Clawd，经历了一次存在主义时刻
 
 🦞💙

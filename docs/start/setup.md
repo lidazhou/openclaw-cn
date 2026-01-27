@@ -1,131 +1,128 @@
 ---
-summary: "Setup guide: keep your Clawdbot setup tailored while staying up-to-date"
+summary: "设置指南：在保持最新版本的同时保持您的 Clawdbot 设置个性化"
 read_when:
-  - Setting up a new machine
-  - You want “latest + greatest” without breaking your personal setup
+  - 设置新机器
+  - 您想要 "最新 + 最佳" 版本而不破坏您的个人设置
 ---
 
-# Setup
+# 设置
 
-Last updated: 2026-01-01
+最后更新：2026-01-01
 
-## TL;DR
-- **Tailoring lives outside the repo:** `~/clawd` (workspace) + `~/.clawdbot/clawdbot.json` (config).
-- **Stable workflow:** install the macOS app; let it run the bundled Gateway.
-- **Bleeding edge workflow:** run the Gateway yourself via `pnpm gateway:watch`, then let the macOS app attach in Local mode.
+## 概述
+- **定制化存在于仓库之外：** `~/clawd`（工作区）+ `~/.clawdbot/clawdbot.json`（配置）。
+- **稳定工作流程：** 安装 macOS 应用；让它运行捆绑的网关。
+- **前沿工作流程：** 通过 `pnpm gateway:watch` 自己运行网关，然后让 macOS 应用以本地模式附加。
 
-## Prereqs (from source)
+## 先决条件（从源码）
 - Node `>=22`
 - `pnpm`
-- Docker (optional; only for containerized setup/e2e — see [Docker](/install/docker))
+- Docker（可选；仅用于容器化设置/e2e — 参见 [Docker](/install/docker)）
 
-## Tailoring strategy (so updates don’t hurt)
+## 定制策略（因此更新不会造成损害）
 
-If you want “100% tailored to me” *and* easy updates, keep your customization in:
+如果您想要 "100% 适合我" *并且* 易于更新，请将您的自定义保存在：
 
-- **Config:** `~/.clawdbot/clawdbot.json` (JSON/JSON5-ish)
-- **Workspace:** `~/clawd` (skills, prompts, memories; make it a private git repo)
+- **配置：** `~/.clawdbot/clawdbot.json`（JSON/JSON5 类似）
+- **工作区：** `~/clawd`（技能、提示、记忆；将其设为私有 git 仓库）
 
-Bootstrap once:
-
-```bash
-clawdbot setup
-```
-
-From inside this repo, use the local CLI entry:
+引导一次：
 
 ```bash
-clawdbot setup
+clawdbot-cn setup
 ```
 
-If you don’t have a global install yet, run it via `pnpm clawdbot setup`.
-
-## Stable workflow (macOS app first)
-
-1) Install + launch **Clawdbot.app** (menu bar).
-2) Complete the onboarding/permissions checklist (TCC prompts).
-3) Ensure Gateway is **Local** and running (the app manages it).
-4) Link surfaces (example: WhatsApp):
+在此仓库内部，使用本地 CLI 入口：
 
 ```bash
-clawdbot channels login
+clawdbot-cn setup
 ```
 
-5) Sanity check:
+如果您还没有全局安装，请通过 `pnpm clawdbot-cn setup` 运行它。
+## 稳定工作流程（先用 macOS 应用）
+
+1) 安装 + 启动 **Clawdbot.app**（菜单栏）。
+2) 完成入门/权限清单（TCC 提示）。
+3) 确保网关是**本地**且正在运行（应用管理它）。
+4) 链接界面（示例：WhatsApp）：
 
 ```bash
-clawdbot health
+clawdbot-cn channels login
 ```
 
-If onboarding is not available in your build:
-- Run `clawdbot setup`, then `clawdbot channels login`, then start the Gateway manually (`clawdbot gateway`).
+5) 健康检查：
 
-## Bleeding edge workflow (Gateway in a terminal)
+```bash
+clawdbot-cn health
+```
 
-Goal: work on the TypeScript Gateway, get hot reload, keep the macOS app UI attached.
+如果您的构建中不可用入门：
+- 运行 `clawdbot-cn setup`，然后 `clawdbot-cn channels login`，然后手动启动网关（`clawdbot-cn gateway`）。
 
-### 0) (Optional) Run the macOS app from source too
+## 前沿工作流程（网关在终端中）
 
-If you also want the macOS app on the bleeding edge:
+目标：在 TypeScript 网关上工作，获得热重载，保持 macOS 应用 UI 附加。
+
+### 0) （可选）也从源码运行 macOS 应用
+
+如果您也希望 macOS 应用处于前沿：
 
 ```bash
 ./scripts/restart-mac.sh
 ```
 
-### 1) Start the dev Gateway
+### 1) 启动开发网关
 
 ```bash
 pnpm install
 pnpm gateway:watch
 ```
 
-`gateway:watch` runs the gateway in watch mode and reloads on TypeScript changes.
+`gateway:watch` 在监视模式下运行网关并在 TypeScript 更改时重新加载。
 
-### 2) Point the macOS app at your running Gateway
+### 2) 让 macOS 应用指向您正在运行的网关
 
-In **Clawdbot.app**:
+在 **Clawdbot.app** 中：
 
-- Connection Mode: **Local**
-The app will attach to the running gateway on the configured port.
+- 连接模式：**本地**
+应用将附加到配置端口上正在运行的网关。
 
-### 3) Verify
+### 3) 验证
 
-- In-app Gateway status should read **“Using existing gateway …”**
-- Or via CLI:
+- 应用内网关状态应显示 **"使用现有网关 …"**
+- 或通过 CLI：
 
 ```bash
-clawdbot health
+clawdbot-cn health
 ```
 
-### Common footguns
-- **Wrong port:** Gateway WS defaults to `ws://127.0.0.1:18789`; keep app + CLI on the same port.
-- **Where state lives:**
-  - Credentials: `~/.clawdbot/credentials/`
-  - Sessions: `~/.clawdbot/agents/<agentId>/sessions/`
-  - Logs: `/tmp/clawdbot/`
+### 常见错误
+- **错误端口：** 网关 WS 默认为 `ws://127.0.0.1:18789`；保持应用 + CLI 在同一端口。
+- **状态存储位置：**
+  - 凭据：`~/.clawdbot/credentials/`
+  - 会话：`~/.clawdbot/agents/<agentId>/sessions/`
+  - 日志：`/tmp/clawdbot/`
+## 更新（不破坏您的设置）
 
-## Updating (without wrecking your setup)
+- 将 `~/clawd` 和 `~/.clawdbot/` 保留为 "您的内容"；不要将个人提示/配置放入 `clawdbot` 仓库。
+- 更新源码：`git pull` + `pnpm install`（当锁文件更改时）+ 继续使用 `pnpm gateway:watch`。
 
-- Keep `~/clawd` and `~/.clawdbot/` as “your stuff”; don’t put personal prompts/config into the `clawdbot` repo.
-- Updating source: `git pull` + `pnpm install` (when lockfile changed) + keep using `pnpm gateway:watch`.
+## Linux（systemd 用户服务）
 
-## Linux (systemd user service)
-
-Linux installs use a systemd **user** service. By default, systemd stops user
-services on logout/idle, which kills the Gateway. Onboarding attempts to enable
-lingering for you (may prompt for sudo). If it’s still off, run:
+Linux 安装使用 systemd **用户** 服务。默认情况下，systemd 在注销/空闲时停止用户
+服务，这会终止网关。入门尝试为您启用持久化（可能提示 sudo）。如果仍然关闭，请运行：
 
 ```bash
 sudo loginctl enable-linger $USER
 ```
 
-For always-on or multi-user servers, consider a **system** service instead of a
-user service (no lingering needed). See [Gateway runbook](/gateway) for the systemd notes.
+对于始终在线或多用户服务器，请考虑使用 **系统** 服务而不是
+用户服务（不需要持久化）。参见 [网关运行手册](/gateway) 获取 systemd 注释。
 
-## Related docs
+## 相关文档
 
-- [Gateway runbook](/gateway) (flags, supervision, ports)
-- [Gateway configuration](/gateway/configuration) (config schema + examples)
-- [Discord](/channels/discord) and [Telegram](/channels/telegram) (reply tags + replyToMode settings)
-- [Clawdbot assistant setup](/start/clawd)
-- [macOS app](/platforms/macos) (gateway lifecycle)
+- [网关运行手册](/gateway)（标志、监督、端口）
+- [网关配置](/gateway/configuration)（配置模式 + 示例）
+- [Discord](/channels/discord) 和 [Telegram](/channels/telegram)（回复标签 + replyToMode 设置）
+- [Clawdbot 助手设置](/start/clawd)
+- [macOS 应用](/platforms/macos)（网关生命周期）

@@ -1,27 +1,27 @@
 ---
-summary: "Beginner guide: from zero to first message (wizard, auth, channels, pairing)"
+summary: "初学者指南：从零到第一条消息（向导、认证、通道、配对）"
 read_when:
-  - First time setup from zero
-  - You want the fastest path from install → onboarding → first message
+  - 零基础首次设置
+  - 想要最快地从安装 → 入门 → 发送首条消息
 ---
 
-# Getting Started
+# 开始使用
 
-Goal: go from **zero** → **first working chat** (with sane defaults) as quickly as possible.
+目标：尽可能快地从**零** → **首次可用聊天**（使用合理默认值）。
 
-Recommended path: use the **CLI onboarding wizard** (`clawdbot onboard`). It sets up:
-- model/auth (OAuth recommended)
-- gateway settings
-- channels (WhatsApp/Telegram/Discord/Mattermost (plugin)/...)
-- pairing defaults (secure DMs)
-- workspace bootstrap + skills
-- optional background service
+推荐路径：使用**CLI 入门向导**（`clawdbot-cn onboard`）。它会设置：
+- 模型/认证（推荐 OAuth）
+- 网关设置
+- 通道（WhatsApp/Telegram/Discord/Mattermost（插件）/...）
+- 配对默认值（安全私信）
+- 工作区引导 + 技能
+- 可选后台服务
 
-If you want the deeper reference pages, jump to: [Wizard](/start/wizard), [Setup](/start/setup), [Pairing](/start/pairing), [Security](/gateway/security).
+如果您想了解更深层的参考页面，请跳转至：[向导](/start/wizard)，[设置](/start/setup)，[配对](/start/pairing)，[安全](/gateway/security)。
 
-Sandboxing note: `agents.defaults.sandbox.mode: "non-main"` uses `session.mainKey` (default `"main"`),
-so group/channel sessions are sandboxed. If you want the main agent to always
-run on host, set an explicit per-agent override:
+沙盒说明：`agents.defaults.sandbox.mode: "non-main"` 使用 `session.mainKey`（默认为`"main"`），
+因此群组/频道会话会被沙盒化。如果希望主代理始终
+在主机上运行，请设置明确的每个代理覆盖：
 
 ```json
 {
@@ -36,163 +36,161 @@ run on host, set an explicit per-agent override:
 }
 ```
 
-## 0) Prereqs
+## 0) 前提条件
 
 - Node `>=22`
-- `pnpm` (optional; recommended if you build from source)
-- **Recommended:** Brave Search API key for web search. Easiest path:
-  `clawdbot configure --section web` (stores `tools.web.search.apiKey`).
-  See [Web tools](/tools/web).
+- `pnpm`（可选；如果从源码构建则推荐）
+- **推荐：** 用于网络搜索的 Brave Search API 密钥。最简单的路径：
+  `clawdbot-cn configure --section web`（存储 `tools.web.search.apiKey`）。
+  参见 [Web 工具](/tools/web)。
 
-macOS: if you plan to build the apps, install Xcode / CLT. For the CLI + gateway only, Node is enough.
-Windows: use **WSL2** (Ubuntu recommended). WSL2 is strongly recommended; native Windows is untested, more problematic, and has poorer tool compatibility. Install WSL2 first, then run the Linux steps inside WSL. See [Windows (WSL2)](/platforms/windows).
+macOS：如果计划构建应用程序，请安装 Xcode / CLT。仅 CLI + 网关的话，Node 就足够了。
+Windows：使用 **WSL2**（推荐 Ubuntu）。强烈推荐 WSL2；原生 Windows 未经测试，问题更多，工具兼容性也较差。请先安装 WSL2，然后在 WSL 内运行 Linux 步骤。参见 [Windows (WSL2)](/platforms/windows)。
 
-## 1) Install the CLI (recommended)
+## 1) 安装 CLI（推荐）
 
 ```bash
-curl -fsSL https://clawd.bot/install.sh | bash
+curl -fsSL https://clawd.org.cn/install.sh | bash
 ```
 
-Installer options (install method, non-interactive, from GitHub): [Install](/install).
+安装程序选项（安装方法、非交互式、来自 GitHub）：[安装](/install)。
 
-Windows (PowerShell):
+Windows（PowerShell）：
 
 ```powershell
-iwr -useb https://clawd.bot/install.ps1 | iex
+iwr -useb https://clawd.org.cn/install.ps1 | iex
 ```
 
-Alternative (global install):
+替代方案（全局安装）：
 
 ```bash
-npm install -g clawdbot@latest
+npm install -g clawdbot-cn@latest
 ```
 
 ```bash
-pnpm add -g clawdbot@latest
+pnpm add -g clawdbot-cn@latest
 ```
 
-## 2) Run the onboarding wizard (and install the service)
+## 2) 运行入门向导（并安装服务）
 
 ```bash
-clawdbot onboard --install-daemon
+clawdbot-cn onboard --install-daemon
 ```
 
-What you’ll choose:
-- **Local vs Remote** gateway
-- **Auth**: OpenAI Code (Codex) subscription (OAuth) or API keys. For Anthropic we recommend an API key; `claude setup-token` is also supported.
-- **Providers**: WhatsApp QR login, Telegram/Discord bot tokens, Mattermost plugin tokens, etc.
-- **Daemon**: background install (launchd/systemd; WSL2 uses systemd)
-  - **Runtime**: Node (recommended; required for WhatsApp/Telegram). Bun is **not recommended**.
-- **Gateway token**: the wizard generates one by default (even on loopback) and stores it in `gateway.auth.token`.
+您将选择：
+- **本地与远程**网关
+- **认证**：OpenAI Code（Codex）订阅（OAuth）或 API 密钥。对于 Anthropic 我们推荐使用 API 密钥；也支持 `claude setup-token`。
+- **提供商**：WhatsApp QR 登录、Telegram/Discord 机器人令牌、Mattermost 插件令牌等。
+- **守护进程**：后台安装（launchd/systemd；WSL2 使用 systemd）
+  - **运行时**：Node（推荐；WhatsApp/Telegram 必需）。**不推荐**使用 Bun。
+- **网关令牌**：向导默认生成一个（即使在回环地址上）并存储在 `gateway.auth.token` 中。
 
-Wizard doc: [Wizard](/start/wizard)
+向导文档：[向导](/start/wizard)
 
-### Auth: where it lives (important)
+### 认证：其存储位置（重要）
 
-- **Recommended Anthropic path:** set an API key (wizard can store it for service use). `claude setup-token` is also supported if you want to reuse Claude Code credentials.
+- **推荐的 Anthropic 路径：** 设置一个 API 密钥（向导可以将其存储以供服务使用）。如果您想重用 Claude Code 凭据，也支持 `claude setup-token`。
 
-- OAuth credentials (legacy import): `~/.clawdbot/credentials/oauth.json`
-- Auth profiles (OAuth + API keys): `~/.clawdbot/agents/<agentId>/agent/auth-profiles.json`
+- OAuth 凭据（旧版导入）：`~/.clawdbot/credentials/oauth.json`
+- 认证配置文件（OAuth + API 密钥）：`~/.clawdbot/agents/<agentId>/agent/auth-profiles.json`
 
-Headless/server tip: do OAuth on a normal machine first, then copy `oauth.json` to the gateway host.
+无头/服务器提示：先在普通机器上完成 OAuth，然后将 `oauth.json` 复制到网关主机。
 
-## 3) Start the Gateway
+## 3) 启动网关
 
-If you installed the service during onboarding, the Gateway should already be running:
+如果您在入门过程中安装了服务，网关应该已经在运行：
 
 ```bash
-clawdbot gateway status
+clawdbot-cn gateway status
 ```
 
-Manual run (foreground):
+手动运行（前台）：
 
 ```bash
-clawdbot gateway --port 18789 --verbose
+clawdbot-cn gateway --port 18789 --verbose
 ```
 
-Dashboard (local loopback): `http://127.0.0.1:18789/`
-If a token is configured, paste it into the Control UI settings (stored as `connect.params.auth.token`).
+仪表板（本地回环）：`http://127.0.0.1:18789/`
+如果配置了令牌，请将其粘贴到控制界面设置中（存储为 `connect.params.auth.token`）。
 
-⚠️ **Bun warning (WhatsApp + Telegram):** Bun has known issues with these
-channels. If you use WhatsApp or Telegram, run the Gateway with **Node**.
-
-## 3.5) Quick verify (2 min)
+⚠️ **Bun 警告（WhatsApp + Telegram）：** Bun 在这些
+渠道上有已知问题。如果您使用 WhatsApp 或 Telegram，请使用 **Node** 运行网关。
+## 3.5) 快速验证（2 分钟）
 
 ```bash
-clawdbot status
-clawdbot health
+clawdbot-cn status
+clawdbot-cn health
 ```
 
-## 4) Pair + connect your first chat surface
+## 4) 配对 + 连接您的首个聊天界面
 
-### WhatsApp (QR login)
+### WhatsApp（二维码登录）
 
 ```bash
-clawdbot channels login
+clawdbot-cn channels login
 ```
 
-Scan via WhatsApp → Settings → Linked Devices.
+通过 WhatsApp → 设置 → 已连接的设备 扫描。
 
-WhatsApp doc: [WhatsApp](/channels/whatsapp)
+WhatsApp 文档：[WhatsApp](/channels/whatsapp)
 
-### Telegram / Discord / others
+### Telegram / Discord / 其他
 
-The wizard can write tokens/config for you. If you prefer manual config, start with:
-- Telegram: [Telegram](/channels/telegram)
-- Discord: [Discord](/channels/discord)
-- Mattermost (plugin): [Mattermost](/channels/mattermost)
+向导可以为您写入令牌/配置。如果您更喜欢手动配置，请从以下开始：
+- Telegram：[Telegram](/channels/telegram)
+- Discord：[Discord](/channels/discord)
+- Mattermost（插件）：[Mattermost](/channels/mattermost)
 
-**Telegram DM tip:** your first DM returns a pairing code. Approve it (see next step) or the bot won’t respond.
+**Telegram 私信提示：** 您的首次私信会返回一个配对码。批准它（参见下一步）或机器人不会响应。
+## 5) 私信安全（配对审批）
 
-## 5) DM safety (pairing approvals)
-
-Default posture: unknown DMs get a short code and messages are not processed until approved.
-If your first DM gets no reply, approve the pairing:
+默认策略：未知私信会收到一个短代码，消息在获得批准前不会被处理。
+如果您的首次私信没有得到回复，请批准配对：
 
 ```bash
-clawdbot pairing list whatsapp
-clawdbot pairing approve whatsapp <code>
+clawdbot-cn pairing list whatsapp
+clawdbot-cn pairing approve whatsapp <code>
 ```
 
-Pairing doc: [Pairing](/start/pairing)
+配对文档：[配对](/start/pairing)
 
-## From source (development)
+## 从源码运行（开发）
 
-If you’re hacking on Clawdbot itself, run from source:
+如果您正在修改 Clawdbot 本身，请从源码运行：
 
 ```bash
 git clone https://github.com/clawdbot/clawdbot.git
 cd clawdbot
 pnpm install
-pnpm ui:build # auto-installs UI deps on first run
+pnpm ui:build # 首次运行时自动安装 UI 依赖
 pnpm build
-clawdbot onboard --install-daemon
+clawdbot-cn onboard --install-daemon
 ```
 
-If you don’t have a global install yet, run the onboarding step via `pnpm clawdbot ...` from the repo.
+如果您还没有全局安装，请从仓库中通过 `pnpm clawdbot-cn ...` 运行入门步骤。
 
-Gateway (from this repo):
+网关（来自此仓库）：
 
 ```bash
 node dist/entry.js gateway --port 18789 --verbose
 ```
 
-## 7) Verify end-to-end
+## 7) 端到端验证
 
-In a new terminal, send a test message:
+在新的终端中，发送一条测试消息：
 
 ```bash
-clawdbot message send --target +15555550123 --message "Hello from Clawdbot"
+clawdbot-cn message send --target +15555550123 --message "Hello from Clawdbot"
 ```
 
-If `clawdbot health` shows “no auth configured”, go back to the wizard and set OAuth/key auth — the agent won’t be able to respond without it.
+如果 `clawdbot-cn health` 显示 "no auth configured"，请返回向导并设置 OAuth/密钥认证 — 代理在没有它的情况下无法响应。
 
-Tip: `clawdbot status --all` is the best pasteable, read-only debug report.
-Health probes: `clawdbot health` (or `clawdbot status --deep`) asks the running gateway for a health snapshot.
+提示：`clawdbot-cn status --all` 是最佳的可粘贴只读调试报告。
+健康检查：`clawdbot-cn health`（或 `clawdbot-cn status --deep`）向运行中的网关请求健康快照。
 
-## Next steps (optional, but great)
+## 下一步（可选，但很棒）
 
-- macOS menu bar app + voice wake: [macOS app](/platforms/macos)
-- iOS/Android nodes (Canvas/camera/voice): [Nodes](/nodes)
-- Remote access (SSH tunnel / Tailscale Serve): [Remote access](/gateway/remote) and [Tailscale](/gateway/tailscale)
-- Always-on / VPN setups: [Remote access](/gateway/remote), [exe.dev](/platforms/exe-dev), [Hetzner](/platforms/hetzner), [macOS remote](/platforms/mac/remote)
+- macOS 菜单栏应用 + 语音唤醒：[macOS 应用](/platforms/macos)
+- iOS/Android 节点（Canvas/摄像头/语音）：[节点](/nodes)
+- 远程访问（SSH 隧道 / Tailscale 服务）：[远程访问](/gateway/remote) 和 [Tailscale](/gateway/tailscale)
+- 始终在线 / VPN 设置：[远程访问](/gateway/remote)，[exe.dev](/platforms/exe-dev)，[Hetzner](/platforms/hetzner)，[macOS 远程](/platforms/mac/remote)
