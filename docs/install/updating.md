@@ -123,7 +123,7 @@ moltbot-cn health
 ```
 
 注意：
-- 当你运行打包的 `moltbot-cn` 二进制文件（[`dist/entry.js`](https://github.com/jiulingyun/moltbot-cn/blob/main/dist/entry.js)）或使用 Node 运行 `dist/` 时，`pnpm build` 很重要。
+- 当你运行打包的 `moltbot-cn` 二进制文件（[`dist/entry.js`](https://github.com/jiulingyun/clawdbot-chinese/blob/main/dist/entry.js)）或使用 Node 运行 `dist/` 时，`pnpm build` 很重要。
 - 如果你从没有全局安装的仓库检出运行，使用 `pnpm moltbot-cn ...` 运行 CLI 命令。
 - 如果你直接从 TypeScript 运行（`pnpm moltbot-cn ...`），通常不需要重建，但**配置迁移仍然适用** → 运行 doctor。
 - 在全局和 git 安装之间切换很简单：安装另一种方式，然后运行 `moltbot-cn doctor` 以便 gateway 服务入口点被重写为当前安装。

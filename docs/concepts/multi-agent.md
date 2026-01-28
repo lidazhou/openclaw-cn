@@ -39,7 +39,7 @@ reach other host locations unless sandboxing is enabled. See
 
 ## Paths (quick map)
 
-- Config: `~/.moltbot/moltbot.json` (or `CLAWDBOT_CONFIG_PATH`)
+- Config: `~/.moltbot-cn/moltbot-cn.json` (or `CLAWDBOT_CONFIG_PATH`)
 - State dir: `~/.clawdbot` (or `CLAWDBOT_STATE_DIR`)
 - Workspace: `~/clawd` (or `~/clawd-<agentId>`)
 - Agent dir: `~/.clawdbot/agents/<agentId>/agent` (or `agents.list[].agentDir`)
@@ -139,7 +139,7 @@ multiple phone numbers without mixing sessions.
 
 ## Example: two WhatsApps → two agents
 
-`~/.moltbot/moltbot.json` (JSON5):
+`~/.moltbot-cn/moltbot-cn.json` (JSON5):
 
 ```js
 {

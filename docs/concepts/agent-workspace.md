@@ -24,7 +24,7 @@ inside a sandbox workspace under `~/.clawdbot/sandboxes`, not your host workspac
 - Default: `~/clawd`
 - If `CLAWDBOT_PROFILE` is set and not `"default"`, the default becomes
   `~/clawd-<profile>`.
-- Override in `~/.moltbot/moltbot.json`:
+- Override in `~/.moltbot-cn/moltbot-cn.json`:
 
 ```json5
 {
@@ -122,7 +122,7 @@ files.
 
 These live under `~/.clawdbot/` and should NOT be committed to the workspace repo:
 
-- `~/.moltbot/moltbot.json` (config)
+- `~/.moltbot-cn/moltbot-cn.json` (config)
 - `~/.clawdbot/credentials/` (OAuth tokens, API keys)
 - `~/.clawdbot/agents/<agentId>/sessions/` (session transcripts + metadata)
 - `~/.clawdbot/skills/` (managed skills)
@@ -218,7 +218,7 @@ Suggested `.gitignore` starter:
 ## Moving the workspace to a new machine
 
 1. Clone the repo to the desired path (default `~/clawd`).
-2. Set `agents.defaults.workspace` to that path in `~/.moltbot/moltbot.json`.
+2. Set `agents.defaults.workspace` to that path in `~/.moltbot-cn/moltbot-cn.json`.
 3. Run `clawdbot setup --workspace <path>` to seed any missing files.
 4. If you need sessions, copy `~/.clawdbot/agents/<agentId>/sessions/` from the
    old machine separately.

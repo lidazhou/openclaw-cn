@@ -10,7 +10,7 @@ Status: WhatsApp Web via Baileys only. Gateway owns the session(s).
 
 ## Quick setup (beginner)
 1) Use a **separate phone number** if possible (recommended).
-2) Configure WhatsApp in `~/.moltbot/moltbot.json`.
+2) Configure WhatsApp in `~/.moltbot-cn/moltbot-cn.json`.
 3) Run `clawdbot channels login` to scan the QR code (Linked Devices).
 4) Start the gateway.
 
