@@ -19,7 +19,8 @@
     }
   },
   "devDependencies": {
-    "clawdbot": "workspace:moltbot-cn@*"
+    "clawdbot": "workspace:moltbot-cn@*",
+    "moltbot-cn": "workspace:*"
   },
   "peerDependencies": {
     "moltbot-cn": "*"

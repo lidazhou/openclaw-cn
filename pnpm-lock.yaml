@@ -308,13 +308,12 @@ importers:
   extensions/discord: {}
 
   extensions/feishu:
-    dependencies:
-      moltbot-cn:
-        specifier: '*'
-        version: 2026.1.24-cn.3(@types/express@5.0.6)(audio-decode@2.2.3)(devtools-protocol@0.0.1561482)(typescript@5.9.3)
     devDependencies:
       clawdbot:
         specifier: workspace:moltbot-cn@*
+        version: link:../..
+      moltbot-cn:
+        specifier: workspace:*
         version: link:../..
 
   extensions/google-antigravity-auth: {}
@@ -326,9 +325,6 @@ importers:
       google-auth-library:
         specifier: ^10.5.0
         version: 10.5.0
-      moltbot-cn:
-        specifier: '*'
-        version: 2026.1.24-cn.3(@types/express@5.0.6)(audio-decode@2.2.3)(devtools-protocol@0.0.1561482)(typescript@5.9.3)
     devDependencies:
       clawdbot:
         specifier: workspace:moltbot-cn@*
