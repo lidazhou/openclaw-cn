@@ -86,7 +86,7 @@ Jenkinsfile
 .env
 .env.example
 # scripts/ 需要保留给 Dockerfile 使用
-docs/
+# docs/ 需要保留运行时使用（包含 templates）
 
 # 但保留 extensions/ 目录中的源代码和编译结果（plugins 必需）
 # 只排除 extensions 中的开发文件
