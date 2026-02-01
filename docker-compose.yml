@@ -8,6 +8,7 @@ services:
   # 网关服务 - 主要的后台服务
   openclaw-cn-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw-cn:local}
+    user: node:node
     environment:
       HOME: /home/node
       TERM: xterm-256color
@@ -37,6 +38,7 @@ services:
   # CLI 服务 - 用于交互式命令
   openclaw-cn-cli:
     image: ${OPENCLAW_IMAGE:-openclaw-cn:local}
+    user: node:node
     environment:
       HOME: /home/node
       TERM: xterm-256color

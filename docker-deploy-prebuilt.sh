@@ -72,12 +72,27 @@ docker compose version
 print_success "Docker 环境检查完成"
 
 print_step 2 "创建配置和工作区目录"
-mkdir -p "${OPENCLAW_CONFIG_DIR:-$HOME/.openclaw}"
-mkdir -p "${OPENCLAW_WORKSPACE_DIR:-$HOME/clawd}"
+OPENCLAW_CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-$HOME/.openclaw}"
+OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-$HOME/clawd}"
+
+mkdir -p "$OPENCLAW_CONFIG_DIR"
+mkdir -p "$OPENCLAW_WORKSPACE_DIR"
+
+# 确保目录权限正确
+# 如果以 root 运行（在容器或具有 sudo 的系统上），设置权限以允许 node 用户访问
+if [[ $EUID -eq 0 ]]; then
+  chmod 755 "$OPENCLAW_CONFIG_DIR"
+  chmod 755 "$OPENCLAW_WORKSPACE_DIR"
+  # 尝试改变所有权为 1000:1000（Docker node 用户的标准 UID/GID）
+  # 这在大多数 Linux 系统上有效，但在 macOS 上会被忽略
+  chown -R 1000:1000 "$OPENCLAW_CONFIG_DIR" 2>/dev/null || true
+  chown -R 1000:1000 "$OPENCLAW_WORKSPACE_DIR" 2>/dev/null || true
+fi
+
 print_success "目录已创建"
 
-export OPENCLAW_CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-$HOME/.openclaw}"
-export OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-$HOME/clawd}"
+export OPENCLAW_CONFIG_DIR
+export OPENCLAW_WORKSPACE_DIR
 export OPENCLAW_GATEWAY_PORT="${OPENCLAW_GATEWAY_PORT:-18789}"
 export OPENCLAW_BRIDGE_PORT="${OPENCLAW_BRIDGE_PORT:-18790}"
 export OPENCLAW_GATEWAY_BIND="${OPENCLAW_GATEWAY_BIND:-lan}"
