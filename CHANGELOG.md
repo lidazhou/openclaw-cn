@@ -2,6 +2,52 @@
 
 Docs: https://docs.clawd.bot
 
+## 2026.2.2
+
+### 🚨 安全更新（Security）
+
+- **紧急修复 CVE: GHSA-g8p2-7wf7-98mq** - 1-Click RCE 漏洞修复
+  - 修复 URL 参数 `gatewayUrl` 被自动应用的问题，现在需要用户确认
+  - 新增 WebSocket Origin 验证，阻止跨站 WebSocket 劫持 (CSWSH) 攻击
+  - 详情：https://github.com/clawdbot/clawdbot/security/advisories/GHSA-g8p2-7wf7-98mq
+- Security: restrict local media reads to workspace/media (#4880)
+
+### ✨ 新功能（Features）
+
+- **飞书流式输出**：新增飞书消息流式输出支持，使用 CardKit 实现实时打字效果
+- **小米 MiMo 模型**：新增小米 MiMo (mimo-v2-flash) 模型提供商支持
+- **火山引擎模型**：新增火山引擎 (Volcengine ARK) 模型提供商支持 (#18) Thanks @dragonforce2010
+- Models: 添加 Qwen 系列和 DeepSeek Reasoner 模型支持
+- Models: 添加 Kimi K2.5 模型到合成目录 (#4407)
+- Auth: 新增 MiniMax OAuth 插件 (upstream #4521)
+
+### 🔧 修复（Fixes）
+
+- Control UI: 修复全局安装时静态资源加载问题 (upstream #4909)
+- macOS: 修复发现服务 stderr 反压问题 (upstream #3304)
+- LINE: 修复 status 命令 TypeError (upstream #4651)
+- Routing: 优先使用 requesterOrigin 而非过期的 session entry (upstream #4957)
+- BlueBubbles: 修复 text+image 消息的去重逻辑 (upstream #4984)
+- Auth: 修复有效 refresh token 时的过期警告 (upstream #4593)
+- Telegram: 接受 react 中的数字 messageId/chatId (upstream #4533)
+- Telegram: 修复 bold/italic HTML 嵌套问题 (upstream #4578)
+- Telegram: 支持 undici fetch 代理 dispatcher (#4456)
+- Telegram: 标准化账户 token 查找 (#5055)
+- Gateway: 防止未定义的 gateway token 默认值 (#4873)
+- Feishu: 增强账户检索逻辑和 AccountId 处理
+
+### 📦 Docker 部署
+
+- 新增预构建 Docker 镜像和多架构支持
+- 改进 Docker 部署文档和故障排除指南
+- 修复容器权限和路径兼容性问题（支持宝塔面板）
+
+### 🔄 上游合并
+
+本版本合并了 openclaw 2026.1.30 版本的部分功能和修复。
+
+---
+
 ## 2026.1.25
 Status: unreleased.
 
