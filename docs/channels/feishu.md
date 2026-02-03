@@ -408,7 +408,22 @@ openclaw-cn pairing list feishu
 
 ### 流式输出
 
-飞书目前不支持消息编辑，因此默认禁用流式输出（`blockStreaming: true`）。机器人会等待完整回复后一次性发送。
+飞书支持通过 CardKit 实现流式输出，默认已启用。当机器人回复时，会先显示一个流式卡片，然后实时更新内容，呈现打字机效果。
+
+**配置选项**：
+
+```json5
+{
+  channels: {
+    feishu: {
+      streaming: true,       // 启用流式卡片输出（默认 true）
+      blockStreaming: true   // 启用块级流式（默认 true）
+    }
+  }
+}
+```
+
+> **注意**：流式卡片需要 `cardkit:card:write` 权限，请确保在飞书开放平台已配置此权限。
 
 ### 多 Agent 路由
 
@@ -494,7 +509,8 @@ openclaw-cn pairing list feishu
 | `channels.feishu.groups.<chat_id>.enabled` | 是否启用该群组 | `true` |
 | `channels.feishu.textChunkLimit` | 消息分块大小 | `2000` |
 | `channels.feishu.mediaMaxMb` | 媒体大小限制 | `30` |
-| `channels.feishu.blockStreaming` | 禁用流式输出 | `true` |
+| `channels.feishu.streaming` | 启用流式卡片输出 | `true` |
+| `channels.feishu.blockStreaming` | 启用块级流式 | `true` |
 
 ---
 
