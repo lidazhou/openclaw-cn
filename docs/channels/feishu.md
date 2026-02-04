@@ -89,7 +89,9 @@ openclaw-cn channels add
       "cardkit:card:write",
       "contact:user.employee_id:readonly",
       "corehr:file:download",
+      "docs:document.content:read",
       "event:ip_list",
+      "im:chat",
       "im:chat.access_event.bot_p2p_chat:read",
       "im:chat.members:bot_access",
       "im:message",
@@ -99,7 +101,8 @@ openclaw-cn channels add
       "im:message:readonly",
       "im:message:send_as_bot",
       "im:resource",
-      "sheets:spreadsheet"
+      "sheets:spreadsheet",
+      "wiki:wiki:readonly"
     ],
     "user": [
       "aily:file:read",
