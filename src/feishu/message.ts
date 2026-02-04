@@ -1,5 +1,6 @@
 import type { Client } from "@larksuiteoapi/node-sdk";
 import { dispatchReplyWithBufferedBlockDispatcher } from "../auto-reply/reply/provider-dispatcher.js";
+import { parseTextCommand, getHelpMenuText, toSlashCommand } from "../channels/text-commands.js";
 import type { ClawdbotConfig } from "../config/config.js";
 import { loadConfig } from "../config/config.js";
 import { logVerbose } from "../globals.js";
