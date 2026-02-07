@@ -25,6 +25,7 @@ import {
 import { readFeishuAllowFromStore, upsertFeishuPairingRequest } from "./pairing-store.js";
 import { sendMessageFeishu } from "./send.js";
 import { FeishuStreamingSession } from "./streaming-card.js";
+import { createTypingIndicatorCallbacks } from "./typing.js";
 import { EmbeddedBlockChunker } from "../agents/pi-embedded-block-chunker.js";
 
 const logger = getChildLogger({ module: "feishu-message" });
@@ -436,6 +437,9 @@ export async function processFeishuMessage(
     ? new EmbeddedBlockChunker({ minChars: 80, maxChars: 400, breakPreference: "sentence" })
     : null;
 
+  // Typing indicator callbacks (for non-streaming mode)
+  const typingCallbacks = createTypingIndicatorCallbacks(client, message.message_id);
+
   // Format body with standardized envelope (consistent with Telegram/WhatsApp)
   const formattedBody = formatInboundEnvelope({
     channel: "Feishu",
@@ -516,6 +520,8 @@ export async function processFeishuMessage(
             await streamingSession.close();
             streamingStarted = false;
           }
+          // Remove typing indicator before sending media
+          await typingCallbacks.onIdle();
           // Send each media item
           for (let i = 0; i < mediaUrls.length; i++) {
             const mediaUrl = mediaUrls[i];
@@ -537,6 +543,8 @@ export async function processFeishuMessage(
         } else if (payload.text) {
           // If streaming wasn't used, send as regular message
           if (!streamingSession?.isActive()) {
+            // Remove typing indicator before sending final reply
+            await typingCallbacks.onIdle();
             await sendMessageFeishu(
               client,
               chatId,
@@ -568,6 +576,8 @@ export async function processFeishuMessage(
         if (streamingSession?.isActive()) {
           streamingSession.close().catch(() => {});
         }
+        // Clean up typing indicator on error
+        typingCallbacks.onIdle().catch(() => {});
       },
       onReplyStart: async () => {
         // Start streaming card when reply generation begins
@@ -587,6 +597,9 @@ export async function processFeishuMessage(
             }
             // Continue without streaming
           }
+        } else if (!streamingSession) {
+          // Non-streaming mode: use typing indicator
+          await typingCallbacks.onReplyStart();
         }
       },
     },
