@@ -30,6 +30,7 @@ Docs: https://docs.clawd.bot
 
 ### 📚 文档（Docs）
 
+- 翻译供应商文档为中文（openai、anthropic、moonshot、openrouter、venice 等 10 篇，moonshot 默认端点改为国内） (#48) - 感谢 @Y1fe1Zh0u
 - 命令响应和使用说明翻译成中文（/whoami、/models、/activation、/send 等）
 - 添加火山引擎供应商文档和配置示例
 - 添加飞书多 Agent 路由配置说明、流式输出说明
