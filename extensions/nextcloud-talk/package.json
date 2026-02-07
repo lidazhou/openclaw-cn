@@ -1,6 +1,6 @@
 {
   "name": "@clawdbot/nextcloud-talk",
-  "version": "0.1.1",
+  "version": "0.1.4",
   "type": "module",
   "description": "Clawdbot Nextcloud Talk channel plugin",
   "clawdbot": {
