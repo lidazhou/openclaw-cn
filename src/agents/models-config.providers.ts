@@ -4,6 +4,7 @@ import {
   DEFAULT_COPILOT_API_BASE_URL,
   resolveCopilotApiToken,
 } from "../providers/github-copilot-token.js";
+import { getCopilotModelDefinitions } from "../providers/github-copilot-models.js";
 import { ensureAuthProfileStore, listProfilesForProvider } from "./auth-profiles.js";
 import { resolveAwsSdkEnvVarName, resolveEnvApiKey } from "./model-auth.js";
 import { discoverBedrockModels } from "./bedrock-discovery.js";
@@ -698,24 +699,14 @@ export async function resolveImplicitCopilotProvider(params: {
     }
   }
 
-  // pi-coding-agent's ModelRegistry marks a model "available" only if its
-  // `AuthStorage` has auth configured for that provider (via auth.json/env/etc).
-  // Our Copilot auth lives in Clawdbot's auth-profiles store instead, so we also
-  // write a runtime-only auth.json entry for pi-coding-agent to pick up.
-  //
-  // This is safe because it's (1) within Clawdbot's agent dir, (2) contains the
-  // GitHub token (not the exchanged Copilot token), and (3) matches existing
-  // patterns for OAuth-like providers in pi-coding-agent.
-  // Note: we deliberately do not write pi-coding-agent's `auth.json` here.
-  // Clawdbot uses its own auth store and exchanges tokens at runtime.
-  // `models list` uses Clawdbot's auth heuristics for availability.
-
-  // We intentionally do NOT define custom models for Copilot in models.json.
-  // pi-coding-agent treats providers with models as replacements requiring apiKey.
-  // We only override baseUrl; the model list comes from pi-ai built-ins.
+  // Provide the full model list so the model registry uses our maintained
+  // catalog (which includes newer models like claude-opus-4.6 that the
+  // upstream pi-ai built-in list may not have yet).
+  // This makes the provider a "full replacement" in the model registry.
+  // normalizeProviders() will auto-fill apiKey from env or auth profiles.
   return {
     baseUrl,
-    models: [],
+    models: getCopilotModelDefinitions(),
   } satisfies ProviderConfig;
 }
 

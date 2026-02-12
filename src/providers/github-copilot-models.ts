@@ -1,39 +1,232 @@
 import type { ModelDefinitionConfig } from "../config/types.js";
 
-const DEFAULT_CONTEXT_WINDOW = 128_000;
-const DEFAULT_MAX_TOKENS = 8192;
+const ZERO_COST = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
 
-// Copilot model ids vary by plan/org and can change.
-// We keep this list intentionally broad; if a model isn't available Copilot will
-// return an error and users can remove it from their config.
-const DEFAULT_MODEL_IDS = [
-  "gpt-4o",
-  "gpt-4.1",
-  "gpt-4.1-mini",
-  "gpt-4.1-nano",
-  "o1",
-  "o1-mini",
-  "o3-mini",
-] as const;
+// Full list of models known to be available through GitHub Copilot.
+// Maintained here because the upstream pi-ai built-in list may lag behind.
+// If a model isn't available for a given Copilot plan, the API will return an
+// error at runtime; users can override via config.
+const COPILOT_MODELS: ModelDefinitionConfig[] = [
+  // --- Anthropic Claude ---
+  {
+    id: "claude-haiku-4.5",
+    name: "Claude Haiku 4.5",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 16_000,
+  },
+  {
+    id: "claude-opus-4.5",
+    name: "Claude Opus 4.5",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 16_000,
+  },
+  {
+    id: "claude-opus-4.6",
+    name: "Claude Opus 4.6",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 200_000,
+    maxTokens: 16_000,
+  },
+  {
+    id: "claude-sonnet-4",
+    name: "Claude Sonnet 4",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 16_000,
+  },
+  {
+    id: "claude-sonnet-4.5",
+    name: "Claude Sonnet 4.5",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 16_000,
+  },
+  // --- Google Gemini ---
+  {
+    id: "gemini-2.5-pro",
+    name: "Gemini 2.5 Pro",
+    api: "openai-completions",
+    reasoning: false,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 64_000,
+  },
+  {
+    id: "gemini-3-flash-preview",
+    name: "Gemini 3 Flash Preview",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 64_000,
+  },
+  {
+    id: "gemini-3-pro-preview",
+    name: "Gemini 3 Pro Preview",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 64_000,
+  },
+  // --- OpenAI GPT ---
+  {
+    id: "gpt-4.1",
+    name: "GPT-4.1",
+    api: "openai-completions",
+    reasoning: false,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 16_384,
+  },
+  {
+    id: "gpt-4o",
+    name: "GPT-4o",
+    api: "openai-completions",
+    reasoning: false,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 64_000,
+    maxTokens: 16_384,
+  },
+  {
+    id: "gpt-5",
+    name: "GPT-5",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 128_000,
+  },
+  {
+    id: "gpt-5-mini",
+    name: "GPT-5 Mini",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 64_000,
+  },
+  {
+    id: "gpt-5.1",
+    name: "GPT-5.1",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 128_000,
+  },
+  {
+    id: "gpt-5.1-codex",
+    name: "GPT-5.1 Codex",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 128_000,
+  },
+  {
+    id: "gpt-5.1-codex-max",
+    name: "GPT-5.1 Codex Max",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 128_000,
+  },
+  {
+    id: "gpt-5.1-codex-mini",
+    name: "GPT-5.1 Codex Mini",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 100_000,
+  },
+  {
+    id: "gpt-5.2",
+    name: "GPT-5.2",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 64_000,
+  },
+  {
+    id: "gpt-5.2-codex",
+    name: "GPT-5.2 Codex",
+    api: "openai-responses",
+    reasoning: true,
+    input: ["text", "image"],
+    cost: ZERO_COST,
+    contextWindow: 272_000,
+    maxTokens: 128_000,
+  },
+  // --- xAI ---
+  {
+    id: "grok-code-fast-1",
+    name: "Grok Code Fast 1",
+    api: "openai-completions",
+    reasoning: true,
+    input: ["text"],
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 64_000,
+  },
+];
 
+/** All model IDs known to be available through GitHub Copilot. */
 export function getDefaultCopilotModelIds(): string[] {
-  return [...DEFAULT_MODEL_IDS];
+  return COPILOT_MODELS.map((m) => m.id);
+}
+
+/** Full model definitions for GitHub Copilot (used when writing models.json). */
+export function getCopilotModelDefinitions(): ModelDefinitionConfig[] {
+  return COPILOT_MODELS;
 }
 
 export function buildCopilotModelDefinition(modelId: string): ModelDefinitionConfig {
   const id = modelId.trim();
   if (!id) throw new Error("Model id required");
+  const existing = COPILOT_MODELS.find((m) => m.id === id);
+  if (existing) return existing;
+  // Fallback for unknown model IDs.
   return {
     id,
     name: id,
-    // pi-coding-agent's registry schema doesn't know about a "github-copilot" API.
-    // We use OpenAI-compatible responses API, while keeping the provider id as
-    // "github-copilot" (pi-ai uses that to attach Copilot-specific headers).
-    api: "openai-responses",
+    api: "openai-completions",
     reasoning: false,
     input: ["text", "image"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: DEFAULT_CONTEXT_WINDOW,
-    maxTokens: DEFAULT_MAX_TOKENS,
+    cost: ZERO_COST,
+    contextWindow: 128_000,
+    maxTokens: 16_000,
   };
 }
