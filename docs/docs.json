@@ -933,6 +933,14 @@
         ]
       },
       {
+        "group": "Guides",
+        "pages": [
+          "guides/qmd-memory-search",
+          "guides/custom-ai-providers",
+          "guides/ssl-deployment"
+        ]
+      },
+      {
         "group": "Gateway & Ops",
         "pages": [
           "gateway",
