@@ -20,14 +20,7 @@ const LOCATION_COMMANDS = ["location.get"];
 
 const SMS_COMMANDS = ["sms.send"];
 
-const SYSTEM_COMMANDS = [
-  "system.run",
-  "system.which",
-  "system.notify",
-  "system.execApprovals.get",
-  "system.execApprovals.set",
-  "browser.proxy",
-];
+const SYSTEM_COMMANDS = ["system.run", "system.which", "system.notify", "browser.proxy"];
 
 const PLATFORM_DEFAULTS: Record<string, string[]> = {
   ios: [...CANVAS_COMMANDS, ...CAMERA_COMMANDS, ...SCREEN_COMMANDS, ...LOCATION_COMMANDS],
