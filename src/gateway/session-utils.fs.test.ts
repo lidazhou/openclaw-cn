@@ -1,11 +1,12 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   readFirstUserMessageFromTranscript,
   readLastMessagePreviewFromTranscript,
   readSessionPreviewItemsFromTranscript,
+  resolveSessionTranscriptCandidates,
 } from "./session-utils.fs.js";
 
 describe("readFirstUserMessageFromTranscript", () => {
@@ -402,5 +403,45 @@ describe("readSessionPreviewItemsFromTranscript", () => {
     expect(result).toHaveLength(1);
     expect(result[0]?.text.length).toBe(24);
     expect(result[0]?.text.endsWith("...")).toBe(true);
+  });
+});
+
+describe("resolveSessionTranscriptCandidates", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  test("fallback candidate uses OPENCLAW_HOME instead of os.homedir()", () => {
+    vi.stubEnv("OPENCLAW_HOME", "/srv/openclaw-home");
+    vi.stubEnv("HOME", "/home/other");
+
+    const candidates = resolveSessionTranscriptCandidates("sess-1", undefined);
+    const fallback = candidates[candidates.length - 1];
+    expect(fallback).toBe(
+      path.join(path.resolve("/srv/openclaw-home"), ".openclaw", "sessions", "sess-1.jsonl"),
+    );
+  });
+});
+
+describe("resolveSessionTranscriptCandidates safety", () => {
+  test("drops unsafe session IDs instead of producing traversal paths", () => {
+    const candidates = resolveSessionTranscriptCandidates(
+      "../etc/passwd",
+      "/tmp/openclaw/agents/main/sessions/sessions.json",
+    );
+
+    expect(candidates).toEqual([]);
+  });
+
+  test("drops unsafe sessionFile candidates and keeps safe fallbacks", () => {
+    const storePath = "/tmp/openclaw/agents/main/sessions/sessions.json";
+    const candidates = resolveSessionTranscriptCandidates(
+      "sess-safe",
+      storePath,
+      "../../etc/passwd",
+    );
+
+    expect(candidates.some((value) => value.includes("etc/passwd"))).toBe(false);
+    expect(candidates).toContain(path.join(path.dirname(storePath), "sess-safe.jsonl"));
   });
 });

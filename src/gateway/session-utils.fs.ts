@@ -2,7 +2,11 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { resolveSessionTranscriptPath } from "../config/sessions.js";
+import {
+  resolveSessionFilePath,
+  resolveSessionTranscriptPath,
+  resolveSessionTranscriptPathInDir,
+} from "../config/sessions.js";
 import { stripEnvelope } from "./chat-sanitize.js";
 import type { SessionPreviewItem } from "./session-utils.types.js";
 
@@ -39,16 +43,39 @@ export function resolveSessionTranscriptCandidates(
   agentId?: string,
 ): string[] {
   const candidates: string[] = [];
-  if (sessionFile) candidates.push(sessionFile);
+  const pushCandidate = (resolve: () => string): void => {
+    try {
+      candidates.push(resolve());
+    } catch {
+      // Ignore invalid paths/IDs and keep scanning other safe candidates.
+    }
+  };
+
   if (storePath) {
-    const dir = path.dirname(storePath);
-    candidates.push(path.join(dir, `${sessionId}.jsonl`));
+    const sessionsDir = path.dirname(storePath);
+    if (sessionFile) {
+      pushCandidate(() => resolveSessionFilePath(sessionId, { sessionFile }, { sessionsDir }));
+    }
+    pushCandidate(() => resolveSessionTranscriptPathInDir(sessionId, sessionsDir));
+  } else if (sessionFile) {
+    if (agentId) {
+      pushCandidate(() => resolveSessionFilePath(sessionId, { sessionFile }, { agentId }));
+    } else {
+      const trimmed = sessionFile.trim();
+      if (trimmed) {
+        candidates.push(path.resolve(trimmed));
+      }
+    }
   }
+
   if (agentId) {
-    candidates.push(resolveSessionTranscriptPath(sessionId, agentId));
+    pushCandidate(() => resolveSessionTranscriptPath(sessionId, agentId));
   }
-  candidates.push(path.join(os.homedir(), ".openclaw", "sessions", `${sessionId}.jsonl`));
-  return candidates;
+
+  const legacyDir = path.join(os.homedir(), ".openclaw", "sessions");
+  pushCandidate(() => resolveSessionTranscriptPathInDir(sessionId, legacyDir));
+
+  return Array.from(new Set(candidates));
 }
 
 export function archiveFileOnDisk(filePath: string, reason: string): string {
