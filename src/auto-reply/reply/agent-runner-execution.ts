@@ -431,7 +431,7 @@ export async function runAgentTurnWithFallback(params: {
         return {
           kind: "final",
           payload: {
-            text: "⚠️ Context limit exceeded. I've reset our conversation to start fresh - please try again.\n\nTo prevent this, increase your compaction buffer by setting `agents.defaults.compaction.reserveTokensFloor` to 4000 or higher in your config.",
+            text: "⚠️ 上下文长度超限。已重置对话，请重试。\n\n如需避免此问题，请在配置中将 `agents.defaults.compaction.reserveTokensFloor` 设为 4000 或更高。",
           },
         };
       }
@@ -441,7 +441,7 @@ export async function runAgentTurnWithFallback(params: {
           return {
             kind: "final",
             payload: {
-              text: "⚠️ Message ordering conflict. I've reset the conversation - please try again.",
+              text: "⚠️ 消息顺序冲突。已重置对话，请重试。",
             },
           };
         }
@@ -464,7 +464,7 @@ export async function runAgentTurnWithFallback(params: {
         return {
           kind: "final",
           payload: {
-            text: "⚠️ Context limit exceeded during compaction. I've reset our conversation to start fresh - please try again.\n\nTo prevent this, increase your compaction buffer by setting `agents.defaults.compaction.reserveTokensFloor` to 4000 or higher in your config.",
+            text: "⚠️ 压缩过程中上下文长度超限。已重置对话，请重试。\n\n如需避免此问题，请在配置中将 `agents.defaults.compaction.reserveTokensFloor` 设为 4000 或更高。",
           },
         };
       }
@@ -474,7 +474,7 @@ export async function runAgentTurnWithFallback(params: {
           return {
             kind: "final",
             payload: {
-              text: "⚠️ Message ordering conflict. I've reset the conversation - please try again.",
+              text: "⚠️ 消息顺序冲突。已重置对话，请重试。",
             },
           };
         }
@@ -520,7 +520,7 @@ export async function runAgentTurnWithFallback(params: {
         return {
           kind: "final",
           payload: {
-            text: "⚠️ Session history was corrupted. I've reset the conversation - please try again!",
+            text: "⚠️ 会话历史已损坏。已重置对话，请重试！",
           },
         };
       }
@@ -528,10 +528,10 @@ export async function runAgentTurnWithFallback(params: {
       defaultRuntime.error(`Embedded agent failed before reply: ${message}`);
       const trimmedMessage = message.replace(/\.\s*$/, "");
       const fallbackText = isContextOverflow
-        ? "⚠️ Context overflow — prompt too large for this model. Try a shorter message or a larger-context model."
+        ? "⚠️ 上下文溢出 - 提示词对当前模型来说过长。请尝试更短的消息或支持更长上下文的模型。"
         : isRoleOrderingError
-          ? "⚠️ Message ordering conflict - please try again. If this persists, use /new to start a fresh session."
-          : `⚠️ Agent failed before reply: ${trimmedMessage}.\nLogs: openclaw-cn logs --follow`;
+          ? "⚠️ 消息顺序冲突，请重试。如果问题持续出现，请使用 /new 开启新对话。"
+          : `⚠️ 代理回复前出错：${trimmedMessage}。\n日志：openclaw-cn logs --follow`;
 
       return {
         kind: "final",
