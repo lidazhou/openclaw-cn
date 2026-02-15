@@ -1,6 +1,6 @@
 # Bundled Hooks
 
-This directory contains hooks that ship with Clawdbot. These hooks are automatically discovered and can be enabled/disabled via CLI or configuration.
+This directory contains hooks that ship with OpenClaw. These hooks are automatically discovered and can be enabled/disabled via CLI or configuration.
 
 ## Available Hooks
 
@@ -10,12 +10,12 @@ Automatically saves session context to memory when you issue `/new`.
 
 **Events**: `command:new`
 **What it does**: Creates a dated memory file with LLM-generated slug based on conversation content.
-**Output**: `<workspace>/memory/YYYY-MM-DD-slug.md` (defaults to `~/clawd`)
+**Output**: `<workspace>/memory/YYYY-MM-DD-slug.md` (defaults to `~/.openclaw/workspace`)
 
 **Enable**:
 
 ```bash
-openclaw-cn hooks enable session-memory
+openclaw hooks enable session-memory
 ```
 
 ### 📝 command-logger
@@ -29,22 +29,7 @@ Logs all command events to a centralized audit file.
 **Enable**:
 
 ```bash
-openclaw-cn hooks enable command-logger
-```
-
-### 😈 soul-evil
-
-Swaps injected `SOUL.md` content with `SOUL_EVIL.md` during a purge window or by random chance.
-
-**Events**: `agent:bootstrap`
-**What it does**: Overrides the injected SOUL content before the system prompt is built.
-**Output**: No files written; swaps happen in-memory only.
-**Docs**: https://docs.clawd.bot/hooks/soul-evil
-
-**Enable**:
-
-```bash
-openclaw-cn hooks enable soul-evil
+openclaw hooks enable command-logger
 ```
 
 ### 🚀 boot-md
@@ -58,7 +43,7 @@ Runs `BOOT.md` whenever the gateway starts (after channels start).
 **Enable**:
 
 ```bash
-openclaw-cn hooks enable boot-md
+openclaw hooks enable boot-md
 ```
 
 ## Hook Structure
@@ -82,9 +67,9 @@ session-memory/
 ---
 name: my-hook
 description: "Short description"
-homepage: https://docs.clawd.bot/hooks#my-hook
+homepage: https://docs.openclaw.ai/hooks#my-hook
 metadata:
-  { "clawdbot": { "emoji": "🔗", "events": ["command:new"], "requires": { "bins": ["node"] } } }
+  { "openclaw": { "emoji": "🔗", "events": ["command:new"], "requires": { "bins": ["node"] } } }
 ---
 # Hook Title
 
@@ -117,26 +102,26 @@ Custom hooks follow the same structure as bundled hooks.
 List all hooks:
 
 ```bash
-openclaw-cn hooks list
+openclaw hooks list
 ```
 
 Show hook details:
 
 ```bash
-openclaw-cn hooks info session-memory
+openclaw hooks info session-memory
 ```
 
 Check hook status:
 
 ```bash
-openclaw-cn hooks check
+openclaw hooks check
 ```
 
 Enable/disable:
 
 ```bash
-openclaw-cn hooks enable session-memory
-openclaw-cn hooks disable command-logger
+openclaw hooks enable session-memory
+openclaw hooks disable command-logger
 ```
 
 ## Configuration
@@ -214,11 +199,11 @@ export default myHandler;
 Test your hooks by:
 
 1. Place hook in workspace hooks directory
-2. Restart gateway: `pkill -9 -f 'clawdbot.*gateway' && pnpm openclaw-cn gateway`
-3. Enable the hook: `openclaw-cn hooks enable my-hook`
+2. Restart gateway: `pkill -9 -f 'openclaw.*gateway' && pnpm openclaw gateway`
+3. Enable the hook: `openclaw hooks enable my-hook`
 4. Trigger the event (e.g., send `/new` command)
 5. Check gateway logs for hook execution
 
 ## Documentation
 
-Full documentation: https://docs.clawd.bot/hooks
+Full documentation: https://docs.openclaw.ai/hooks
