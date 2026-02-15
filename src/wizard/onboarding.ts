@@ -368,8 +368,6 @@ export async function runOnboardingWizard(
     opts: {
       tokenProvider: opts.tokenProvider,
       token: opts.authChoice === "apiKey" && opts.token ? opts.token : undefined,
-      // @ts-ignore -- cherry-pick upstream type mismatch
-      // @ts-ignore -- cherry-pick upstream type mismatch
       volcengineApiKey: opts.volcengineApiKey,
       xiaomiApiKey: opts.xiaomiApiKey,
     },

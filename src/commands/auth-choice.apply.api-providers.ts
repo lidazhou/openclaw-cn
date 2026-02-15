@@ -55,6 +55,20 @@ import {
   setZaiApiKey,
   ZAI_DEFAULT_MODEL_REF,
 } from "./onboard-auth.js";
+import {
+  applySiliconflowConfig,
+  applySiliconflowProviderConfig,
+  applyDashscopeConfig,
+  applyDashscopeProviderConfig,
+  applyDeepseekConfig,
+  applyDeepseekProviderConfig,
+  SILICONFLOW_DEFAULT_MODEL_REF,
+  DASHSCOPE_DEFAULT_MODEL_REF,
+  DEEPSEEK_DEFAULT_MODEL_REF,
+  setSiliconflowApiKey,
+  setDashscopeApiKey,
+  setDeepseekApiKey,
+} from "./onboard-auth.js";
 import { OPENCODE_ZEN_DEFAULT_MODEL } from "./opencode-zen-model-default.js";
 
 export async function applyAuthChoiceApiProviders(
@@ -176,6 +190,147 @@ export async function applyAuthChoiceApiProviders(
         applyDefaultConfig: applyOpenrouterConfig,
         applyProviderConfig: applyOpenrouterProviderConfig,
         noteDefault: OPENROUTER_DEFAULT_MODEL_REF,
+        noteAgentModel,
+        prompter: params.prompter,
+      });
+      nextConfig = applied.config;
+      agentModelOverride = applied.agentModelOverride ?? agentModelOverride;
+    }
+    return { config: nextConfig, agentModelOverride };
+  }
+
+  // 新增：硅基流动 API Key 认证与默认模型配置
+  if (authChoice === "siliconflow-api-key") {
+    let hasCredential = false;
+    if (!hasCredential && params.opts?.token && params.opts?.tokenProvider === "siliconflow") {
+      await setSiliconflowApiKey(normalizeApiKeyInput(params.opts.token), params.agentDir);
+      hasCredential = true;
+    }
+    const envKey = resolveEnvApiKey("siliconflow");
+    if (envKey && !hasCredential) {
+      const useExisting = await params.prompter.confirm({
+        message: `使用已有 SILICONFLOW_API_KEY (${envKey.source}, ${formatApiKeyPreview(envKey.apiKey)})？`,
+        initialValue: true,
+      });
+      if (useExisting) {
+        await setSiliconflowApiKey(envKey.apiKey, params.agentDir);
+        hasCredential = true;
+      }
+    }
+    if (!hasCredential) {
+      const key = await params.prompter.text({
+        message: "输入硅基流动 (SiliconFlow) API key",
+        validate: validateApiKeyInput,
+      });
+      await setSiliconflowApiKey(normalizeApiKeyInput(String(key)), params.agentDir);
+    }
+    nextConfig = applyAuthProfileConfig(nextConfig, {
+      profileId: "siliconflow:default",
+      provider: "siliconflow",
+      mode: "api_key",
+    });
+    {
+      const applied = await applyDefaultModelChoice({
+        config: nextConfig,
+        setDefaultModel: params.setDefaultModel,
+        defaultModel: SILICONFLOW_DEFAULT_MODEL_REF,
+        applyDefaultConfig: applySiliconflowConfig,
+        applyProviderConfig: applySiliconflowProviderConfig,
+        noteDefault: SILICONFLOW_DEFAULT_MODEL_REF,
+        noteAgentModel,
+        prompter: params.prompter,
+      });
+      nextConfig = applied.config;
+      agentModelOverride = applied.agentModelOverride ?? agentModelOverride;
+    }
+    return { config: nextConfig, agentModelOverride };
+  }
+
+  // 新增：阿里云百炼 (DashScope) API Key 认证与默认模型配置
+  if (authChoice === "dashscope-api-key") {
+    let hasCredential = false;
+    if (!hasCredential && params.opts?.token && params.opts?.tokenProvider === "dashscope") {
+      await setDashscopeApiKey(normalizeApiKeyInput(params.opts.token), params.agentDir);
+      hasCredential = true;
+    }
+    const envKey = resolveEnvApiKey("dashscope");
+    if (envKey && !hasCredential) {
+      const useExisting = await params.prompter.confirm({
+        message: `使用已有 DASHSCOPE_API_KEY (${envKey.source}, ${formatApiKeyPreview(envKey.apiKey)})？`,
+        initialValue: true,
+      });
+      if (useExisting) {
+        await setDashscopeApiKey(envKey.apiKey, params.agentDir);
+        hasCredential = true;
+      }
+    }
+    if (!hasCredential) {
+      const key = await params.prompter.text({
+        message: "输入阿里云百炼 (DashScope) API key",
+        validate: validateApiKeyInput,
+      });
+      await setDashscopeApiKey(normalizeApiKeyInput(String(key)), params.agentDir);
+    }
+    nextConfig = applyAuthProfileConfig(nextConfig, {
+      profileId: "dashscope:default",
+      provider: "dashscope",
+      mode: "api_key",
+    });
+    {
+      const applied = await applyDefaultModelChoice({
+        config: nextConfig,
+        setDefaultModel: params.setDefaultModel,
+        defaultModel: DASHSCOPE_DEFAULT_MODEL_REF,
+        applyDefaultConfig: applyDashscopeConfig,
+        applyProviderConfig: applyDashscopeProviderConfig,
+        noteDefault: DASHSCOPE_DEFAULT_MODEL_REF,
+        noteAgentModel,
+        prompter: params.prompter,
+      });
+      nextConfig = applied.config;
+      agentModelOverride = applied.agentModelOverride ?? agentModelOverride;
+    }
+    return { config: nextConfig, agentModelOverride };
+  }
+
+  // 新增：DeepSeek API Key 认证与默认模型配置
+  if (authChoice === "deepseek-api-key") {
+    let hasCredential = false;
+    if (!hasCredential && params.opts?.token && params.opts?.tokenProvider === "deepseek") {
+      await setDeepseekApiKey(normalizeApiKeyInput(params.opts.token), params.agentDir);
+      hasCredential = true;
+    }
+    const envKey = resolveEnvApiKey("deepseek");
+    if (envKey && !hasCredential) {
+      const useExisting = await params.prompter.confirm({
+        message: `使用已有 DEEPSEEK_API_KEY (${envKey.source}, ${formatApiKeyPreview(envKey.apiKey)})？`,
+        initialValue: true,
+      });
+      if (useExisting) {
+        await setDeepseekApiKey(envKey.apiKey, params.agentDir);
+        hasCredential = true;
+      }
+    }
+    if (!hasCredential) {
+      const key = await params.prompter.text({
+        message: "输入 DeepSeek API key",
+        validate: validateApiKeyInput,
+      });
+      await setDeepseekApiKey(normalizeApiKeyInput(String(key)), params.agentDir);
+    }
+    nextConfig = applyAuthProfileConfig(nextConfig, {
+      profileId: "deepseek:default",
+      provider: "deepseek",
+      mode: "api_key",
+    });
+    {
+      const applied = await applyDefaultModelChoice({
+        config: nextConfig,
+        setDefaultModel: params.setDefaultModel,
+        defaultModel: DEEPSEEK_DEFAULT_MODEL_REF,
+        applyDefaultConfig: applyDeepseekConfig,
+        applyProviderConfig: applyDeepseekProviderConfig,
+        noteDefault: DEEPSEEK_DEFAULT_MODEL_REF,
         noteAgentModel,
         prompter: params.prompter,
       });

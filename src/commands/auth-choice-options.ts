@@ -22,7 +22,12 @@ export type AuthChoiceGroupId =
   | "minimax"
   | "synthetic"
   | "venice"
-  | "qwen";
+  | "qwen"
+  // 新增：OpenAI兼容供应商
+  | "siliconflow"
+  | "dashscope"
+  | "deepseek"
+  | "volcengine";
 
 export type AuthChoiceGroup = {
   value: AuthChoiceGroupId;
@@ -127,6 +132,30 @@ const AUTH_CHOICE_GROUP_DEFS: {
     hint: "Account ID + Gateway ID + API key",
     choices: ["cloudflare-ai-gateway-api-key"],
   },
+  {
+    value: "siliconflow",
+    label: "硅基流动 (SiliconFlow)",
+    hint: "OpenAI兼容 · API key",
+    choices: ["siliconflow-api-key"],
+  },
+  {
+    value: "dashscope",
+    label: "阿里云百炼 (DashScope)",
+    hint: "OpenAI兼容 · API key",
+    choices: ["dashscope-api-key"],
+  },
+  {
+    value: "deepseek",
+    label: "DeepSeek",
+    hint: "OpenAI兼容 · API key",
+    choices: ["deepseek-api-key"],
+  },
+  {
+    value: "volcengine",
+    label: "火山引擎 (VolcanoEngine)",
+    hint: "ARK API key",
+    choices: ["volcengine-api-key"],
+  },
 ];
 
 export function buildAuthChoiceOptions(params: {
@@ -218,6 +247,11 @@ export function buildAuthChoiceOptions(params: {
     label: "MiniMax M2.1 Lightning",
     hint: "Faster, higher output cost",
   });
+  // 新增：OpenAI兼容供应商API Key选项
+  options.push({ value: "siliconflow-api-key", label: "硅基流动 API key" });
+  options.push({ value: "dashscope-api-key", label: "阿里云百炼 (DashScope) API key" });
+  options.push({ value: "deepseek-api-key", label: "DeepSeek API key" });
+  options.push({ value: "volcengine-api-key", label: "火山引擎 (ARK) API key" });
   if (params.includeSkip) {
     options.push({ value: "skip", label: "Skip for now" });
   }

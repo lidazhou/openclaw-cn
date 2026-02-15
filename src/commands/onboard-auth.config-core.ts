@@ -3,6 +3,7 @@ import {
   buildCloudflareAiGatewayModelDefinition,
   resolveCloudflareAiGatewayBaseUrl,
 } from "../agents/cloudflare-ai-gateway.js";
+import { buildVolcengineProvider } from "../agents/models-config.providers.js";
 import { buildXiaomiProvider, XIAOMI_DEFAULT_MODEL_ID } from "../agents/models-config.providers.js";
 import {
   buildSyntheticModelDefinition,
@@ -30,6 +31,21 @@ import {
   MOONSHOT_CN_BASE_URL,
   MOONSHOT_DEFAULT_MODEL_ID,
   MOONSHOT_DEFAULT_MODEL_REF,
+} from "./onboard-auth.models.js";
+import {
+  buildSiliconflowModelDefinition,
+  SILICONFLOW_BASE_URL,
+  SILICONFLOW_DEFAULT_MODEL_REF,
+} from "./onboard-auth.models.js";
+import {
+  buildDashscopeModelDefinition,
+  DASHSCOPE_BASE_URL,
+  DASHSCOPE_DEFAULT_MODEL_REF,
+} from "./onboard-auth.models.js";
+import {
+  buildDeepseekModelDefinition,
+  DEEPSEEK_BASE_URL,
+  DEEPSEEK_DEFAULT_MODEL_REF,
 } from "./onboard-auth.models.js";
 
 export function applyZaiConfig(cfg: ClawdbotConfig): ClawdbotConfig {
@@ -373,6 +389,205 @@ export function applyKimiCodeConfig(cfg: ClawdbotConfig): ClawdbotConfig {
   };
 }
 
+// 新增：硅基流动（SiliconFlow）提供商配置
+export function applySiliconflowProviderConfig(cfg: ClawdbotConfig): ClawdbotConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[SILICONFLOW_DEFAULT_MODEL_REF] = {
+    ...models[SILICONFLOW_DEFAULT_MODEL_REF],
+    alias: models[SILICONFLOW_DEFAULT_MODEL_REF]?.alias ?? "SiliconFlow",
+  };
+
+  const providers = { ...cfg.models?.providers };
+  const existingProvider = providers.siliconflow;
+  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
+  const defaultModel = buildSiliconflowModelDefinition();
+  const hasDefaultModel = existingModels.some((model) => model.id === defaultModel.id);
+  const mergedModels = hasDefaultModel ? existingModels : [...existingModels, defaultModel];
+  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as {
+    apiKey?: string;
+  };
+  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
+  const normalizedApiKey = resolvedApiKey?.trim();
+  providers.siliconflow = {
+    ...existingProviderRest,
+    baseUrl: SILICONFLOW_BASE_URL,
+    api: "openai-completions",
+    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
+    models: mergedModels.length > 0 ? mergedModels : [defaultModel],
+  };
+
+  return {
+    ...cfg,
+    agents: {
+      ...cfg.agents,
+      defaults: {
+        ...cfg.agents?.defaults,
+        models,
+      },
+    },
+    models: {
+      mode: cfg.models?.mode ?? "merge",
+      providers,
+    },
+  };
+}
+
+export function applySiliconflowConfig(cfg: ClawdbotConfig): ClawdbotConfig {
+  const next = applySiliconflowProviderConfig(cfg);
+  const existingModel = next.agents?.defaults?.model;
+  return {
+    ...next,
+    agents: {
+      ...next.agents,
+      defaults: {
+        ...next.agents?.defaults,
+        model:
+          existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+            ? {
+                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
+                primary: SILICONFLOW_DEFAULT_MODEL_REF,
+              }
+            : {
+                primary: SILICONFLOW_DEFAULT_MODEL_REF,
+                fallbacks: [
+                  "siliconflow/Qwen/Qwen2.5-14B-Instruct",
+                  "siliconflow/Qwen/Qwen2.5-7B-Instruct",
+                ],
+              },
+      },
+    },
+  };
+}
+
+// 新增：阿里云百炼（DashScope）提供商配置
+export function applyDashscopeProviderConfig(cfg: ClawdbotConfig): ClawdbotConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[DASHSCOPE_DEFAULT_MODEL_REF] = {
+    ...models[DASHSCOPE_DEFAULT_MODEL_REF],
+    alias: models[DASHSCOPE_DEFAULT_MODEL_REF]?.alias ?? "Qwen Plus",
+  };
+
+  const providers = { ...cfg.models?.providers };
+  const existingProvider = providers.dashscope;
+  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
+  const defaultModel = buildDashscopeModelDefinition();
+  const hasDefaultModel = existingModels.some((model) => model.id === defaultModel.id);
+  const mergedModels = hasDefaultModel ? existingModels : [...existingModels, defaultModel];
+  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as {
+    apiKey?: string;
+  };
+  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
+  const normalizedApiKey = resolvedApiKey?.trim();
+  providers.dashscope = {
+    ...existingProviderRest,
+    baseUrl: DASHSCOPE_BASE_URL,
+    api: "openai-completions",
+    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
+    models: mergedModels.length > 0 ? mergedModels : [defaultModel],
+  };
+
+  return {
+    ...cfg,
+    agents: {
+      ...cfg.agents,
+      defaults: {
+        ...cfg.agents?.defaults,
+        models,
+      },
+    },
+    models: {
+      mode: cfg.models?.mode ?? "merge",
+      providers,
+    },
+  };
+}
+
+export function applyDashscopeConfig(cfg: ClawdbotConfig): ClawdbotConfig {
+  const next = applyDashscopeProviderConfig(cfg);
+  const existingModel = next.agents?.defaults?.model;
+  return {
+    ...next,
+    agents: {
+      ...next.agents,
+      defaults: {
+        ...next.agents?.defaults,
+        model: {
+          ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+            ? {
+                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
+              }
+            : undefined),
+          primary: DASHSCOPE_DEFAULT_MODEL_REF,
+        },
+      },
+    },
+  };
+}
+
+// 新增：DeepSeek提供商配置
+export function applyDeepseekProviderConfig(cfg: ClawdbotConfig): ClawdbotConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  models[DEEPSEEK_DEFAULT_MODEL_REF] = {
+    ...models[DEEPSEEK_DEFAULT_MODEL_REF],
+    alias: models[DEEPSEEK_DEFAULT_MODEL_REF]?.alias ?? "DeepSeek Chat",
+  };
+
+  const providers = { ...cfg.models?.providers };
+  const existingProvider = providers.deepseek;
+  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
+  const defaultModel = buildDeepseekModelDefinition();
+  const hasDefaultModel = existingModels.some((model) => model.id === defaultModel.id);
+  const mergedModels = hasDefaultModel ? existingModels : [...existingModels, defaultModel];
+  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as {
+    apiKey?: string;
+  };
+  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
+  const normalizedApiKey = resolvedApiKey?.trim();
+  providers.deepseek = {
+    ...existingProviderRest,
+    baseUrl: DEEPSEEK_BASE_URL,
+    api: "openai-completions",
+    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
+    models: mergedModels.length > 0 ? mergedModels : [defaultModel],
+  };
+
+  return {
+    ...cfg,
+    agents: {
+      ...cfg.agents,
+      defaults: {
+        ...cfg.agents?.defaults,
+        models,
+      },
+    },
+    models: {
+      mode: cfg.models?.mode ?? "merge",
+      providers,
+    },
+  };
+}
+
+export function applyDeepseekConfig(cfg: ClawdbotConfig): ClawdbotConfig {
+  const next = applyDeepseekProviderConfig(cfg);
+  const existingModel = next.agents?.defaults?.model;
+  return {
+    ...next,
+    agents: {
+      ...next.agents,
+      defaults: {
+        ...next.agents?.defaults,
+        model: {
+          ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+            ? {
+                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
+              }
+            : undefined),
+          primary: DEEPSEEK_DEFAULT_MODEL_REF,
+        },
+      },
+    },
+  };
+}
 export function applySyntheticProviderConfig(cfg: ClawdbotConfig): ClawdbotConfig {
   const models = { ...cfg.agents?.defaults?.models };
   models[SYNTHETIC_DEFAULT_MODEL_REF] = {
@@ -633,6 +848,103 @@ export function applyAuthProfileConfig(
       ...cfg.auth,
       profiles,
       ...(order ? { order } : {}),
+    },
+  };
+}
+
+export function applyVolcengineProviderConfig(
+  cfg: ClawdbotConfig,
+  modelId: string,
+): ClawdbotConfig {
+  const models = { ...cfg.agents?.defaults?.models };
+  const modelRef = `volcengine/${modelId}`;
+  models[modelRef] = {
+    ...models[modelRef],
+    alias: models[modelRef]?.alias ?? modelId,
+  };
+
+  const providers = { ...cfg.models?.providers };
+  const existingProvider = providers.volcengine;
+  const defaultProvider = buildVolcengineProvider();
+  const existingModels = Array.isArray(existingProvider?.models) ? existingProvider.models : [];
+  const _defaultModels = defaultProvider.models ?? [];
+  const hasDefaultModel = existingModels.some((model) => model.id === modelId);
+  const mergedModels =
+    existingModels.length > 0
+      ? hasDefaultModel
+        ? existingModels
+        : [
+            ...existingModels,
+            {
+              id: modelId,
+              name: modelId,
+              reasoning: false,
+              input: ["text"] as ("text" | "image")[],
+              cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+              contextWindow: 128000,
+              maxTokens: 4096,
+            },
+          ]
+      : [
+          {
+            id: modelId,
+            name: modelId,
+            reasoning: false,
+            input: ["text"] as ("text" | "image")[],
+            cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+            contextWindow: 128000,
+            maxTokens: 4096,
+          },
+        ];
+
+  const { apiKey: existingApiKey, ...existingProviderRest } = (existingProvider ?? {}) as Record<
+    string,
+    unknown
+  > as { apiKey?: string };
+  const resolvedApiKey = typeof existingApiKey === "string" ? existingApiKey : undefined;
+  const normalizedApiKey = resolvedApiKey?.trim();
+  providers.volcengine = {
+    ...existingProviderRest,
+    baseUrl: defaultProvider.baseUrl,
+    api: defaultProvider.api,
+    ...(normalizedApiKey ? { apiKey: normalizedApiKey } : {}),
+    models: mergedModels,
+  };
+
+  return {
+    ...cfg,
+    agents: {
+      ...cfg.agents,
+      defaults: {
+        ...cfg.agents?.defaults,
+        models,
+      },
+    },
+    models: {
+      mode: cfg.models?.mode ?? "merge",
+      providers,
+    },
+  };
+}
+
+export function applyVolcengineConfig(cfg: ClawdbotConfig, modelId: string): ClawdbotConfig {
+  const next = applyVolcengineProviderConfig(cfg, modelId);
+  const existingModel = next.agents?.defaults?.model;
+  return {
+    ...next,
+    agents: {
+      ...next.agents,
+      defaults: {
+        ...next.agents?.defaults,
+        model: {
+          ...(existingModel && "fallbacks" in (existingModel as Record<string, unknown>)
+            ? {
+                fallbacks: (existingModel as { fallbacks?: string[] }).fallbacks,
+              }
+            : undefined),
+          primary: `volcengine/${modelId}`,
+        },
+      },
     },
   };
 }

@@ -21,9 +21,19 @@ export {
   applyVeniceProviderConfig,
   applyVercelAiGatewayConfig,
   applyVercelAiGatewayProviderConfig,
+  applyVolcengineConfig,
+  applyVolcengineProviderConfig,
   applyXiaomiConfig,
   applyXiaomiProviderConfig,
   applyZaiConfig,
+} from "./onboard-auth.config-core.js";
+export {
+  applySiliconflowConfig,
+  applySiliconflowProviderConfig,
+  applyDashscopeConfig,
+  applyDashscopeProviderConfig,
+  applyDeepseekConfig,
+  applyDeepseekProviderConfig,
 } from "./onboard-auth.config-core.js";
 export {
   applyMinimaxApiConfig,
@@ -52,12 +62,18 @@ export {
   setSyntheticApiKey,
   setVeniceApiKey,
   setVercelAiGatewayApiKey,
+  setVolcengineApiKey,
   setXiaomiApiKey,
   setZaiApiKey,
   writeOAuthCredentials,
   VERCEL_AI_GATEWAY_DEFAULT_MODEL_REF,
   XIAOMI_DEFAULT_MODEL_REF,
   ZAI_DEFAULT_MODEL_REF,
+} from "./onboard-auth.credentials.js";
+export {
+  setSiliconflowApiKey,
+  setDashscopeApiKey,
+  setDeepseekApiKey,
 } from "./onboard-auth.credentials.js";
 export {
   buildMinimaxApiModelDefinition,
@@ -73,6 +89,17 @@ export {
   MOONSHOT_BASE_URL,
   MOONSHOT_DEFAULT_MODEL_ID,
   MOONSHOT_DEFAULT_MODEL_REF,
+} from "./onboard-auth.models.js";
+export {
+  SILICONFLOW_BASE_URL,
+  SILICONFLOW_DEFAULT_MODEL_REF,
+  DASHSCOPE_BASE_URL,
+  DASHSCOPE_DEFAULT_MODEL_REF,
+  DEEPSEEK_BASE_URL,
+  DEEPSEEK_DEFAULT_MODEL_REF,
+  buildSiliconflowModelDefinition,
+  buildDashscopeModelDefinition,
+  buildDeepseekModelDefinition,
 } from "./onboard-auth.models.js";
 
 export async function setHuggingfaceApiKey(

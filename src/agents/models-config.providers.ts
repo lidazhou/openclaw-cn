@@ -81,6 +81,41 @@ const OLLAMA_DEFAULT_COST = {
   cacheWrite: 0,
 };
 
+// 新增：OpenAI兼容供应商（硅基流动、阿里云百炼、DeepSeek）默认配置
+const SILICONFLOW_BASE_URL = "https://api.siliconflow.cn/v1";
+// 采用在中文环境中更常见且可用的Qwen 2.5指令模型作为默认
+const SILICONFLOW_DEFAULT_MODEL_ID = "Qwen/Qwen2.5-32B-Instruct";
+const SILICONFLOW_DEFAULT_CONTEXT_WINDOW = 128000;
+const SILICONFLOW_DEFAULT_MAX_TOKENS = 8192;
+const SILICONFLOW_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
+const DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const DASHSCOPE_DEFAULT_MODEL_ID = "qwen-plus";
+const DASHSCOPE_DEFAULT_CONTEXT_WINDOW = 128000;
+const DASHSCOPE_DEFAULT_MAX_TOKENS = 8192;
+const DASHSCOPE_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
+const DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1";
+const DEEPSEEK_DEFAULT_MODEL_ID = "deepseek-chat";
+const DEEPSEEK_DEFAULT_CONTEXT_WINDOW = 128000;
+const DEEPSEEK_DEFAULT_MAX_TOKENS = 8192;
+const DEEPSEEK_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
 interface OllamaModel {
   name: string;
   modified_at: string;
@@ -277,6 +312,25 @@ export function normalizeProviders(params: {
       normalizedProvider = googleNormalized;
     }
 
+    if (
+      normalizedKey === "volcengine" &&
+      process.env.MODEL_AGENT_CLIENT_REQ_ID &&
+      process.env.MODEL_AGENT_CLIENT_REQ_VALUE
+    ) {
+      const keyName = process.env.MODEL_AGENT_CLIENT_REQ_ID;
+      const valName = process.env.MODEL_AGENT_CLIENT_REQ_VALUE;
+      if (normalizedProvider.headers?.[keyName] !== valName) {
+        mutated = true;
+        normalizedProvider = {
+          ...normalizedProvider,
+          headers: {
+            ...normalizedProvider.headers,
+            [keyName]: valName,
+          },
+        };
+      }
+    }
+
     next[key] = normalizedProvider;
   }
 
@@ -399,6 +453,60 @@ export function buildXiaomiProvider(): ProviderConfig {
   };
 }
 
+function buildSiliconflowProvider(): ProviderConfig {
+  return {
+    baseUrl: SILICONFLOW_BASE_URL,
+    api: "openai-completions",
+    models: [
+      {
+        id: SILICONFLOW_DEFAULT_MODEL_ID,
+        name: "SiliconFlow Auto",
+        reasoning: false,
+        input: ["text"],
+        cost: SILICONFLOW_DEFAULT_COST,
+        contextWindow: SILICONFLOW_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: SILICONFLOW_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
+function buildDashscopeProvider(): ProviderConfig {
+  return {
+    baseUrl: DASHSCOPE_BASE_URL,
+    api: "openai-completions",
+    models: [
+      {
+        id: DASHSCOPE_DEFAULT_MODEL_ID,
+        name: "Qwen Plus",
+        reasoning: false,
+        input: ["text"],
+        cost: DASHSCOPE_DEFAULT_COST,
+        contextWindow: DASHSCOPE_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: DASHSCOPE_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
+function buildDeepseekProvider(): ProviderConfig {
+  return {
+    baseUrl: DEEPSEEK_BASE_URL,
+    api: "openai-completions",
+    models: [
+      {
+        id: DEEPSEEK_DEFAULT_MODEL_ID,
+        name: "DeepSeek Chat",
+        reasoning: false,
+        input: ["text"],
+        cost: DEEPSEEK_DEFAULT_COST,
+        contextWindow: DEEPSEEK_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: DEEPSEEK_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
 async function buildVeniceProvider(): Promise<ProviderConfig> {
   const models = await discoverVeniceModels();
   return {
@@ -460,6 +568,34 @@ export async function resolveImplicitProviders(params: {
     resolveApiKeyFromProfiles({ provider: "venice", store: authStore });
   if (veniceKey) {
     providers.venice = { ...(await buildVeniceProvider()), apiKey: veniceKey };
+  }
+
+  const siliconKey =
+    resolveEnvApiKeyVarName("siliconflow") ??
+    resolveApiKeyFromProfiles({ provider: "siliconflow", store: authStore });
+  if (siliconKey) {
+    providers.siliconflow = { ...buildSiliconflowProvider(), apiKey: siliconKey };
+  }
+
+  const dashscopeKey =
+    resolveEnvApiKeyVarName("dashscope") ??
+    resolveApiKeyFromProfiles({ provider: "dashscope", store: authStore });
+  if (dashscopeKey) {
+    providers.dashscope = { ...buildDashscopeProvider(), apiKey: dashscopeKey };
+  }
+
+  const deepseekKey =
+    resolveEnvApiKeyVarName("deepseek") ??
+    resolveApiKeyFromProfiles({ provider: "deepseek", store: authStore });
+  if (deepseekKey) {
+    providers.deepseek = { ...buildDeepseekProvider(), apiKey: deepseekKey };
+  }
+
+  const volcengineKey =
+    resolveEnvApiKeyVarName("volcengine") ??
+    resolveApiKeyFromProfiles({ provider: "volcengine", store: authStore });
+  if (volcengineKey) {
+    providers.volcengine = { ...buildVolcengineProvider(), apiKey: volcengineKey };
   }
 
   const qwenProfiles = listProfilesForProvider(authStore, "qwen-portal");
@@ -609,4 +745,13 @@ export async function resolveImplicitBedrockProvider(params: {
 }
 
 export const VOLCENGINE_API_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3";
+
+export function buildVolcengineProvider(): ProviderConfig {
+  return {
+    baseUrl: VOLCENGINE_API_BASE_URL,
+    api: "openai-completions",
+    models: [],
+  };
+}
+
 export const XIAOMI_API_BASE_URL = "https://api.chat.xiaomi.com/v1";
