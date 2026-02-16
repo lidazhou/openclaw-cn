@@ -6,7 +6,7 @@ const originalConnect = ClawdbotApp.prototype.connect;
 
 function mountApp(pathname: string) {
   window.history.replaceState({}, "", pathname);
-  const app = document.createElement("clawdbot-app") as ClawdbotApp;
+  const app = document.createElement("openclaw-app") as ClawdbotApp;
   document.body.append(app);
   return app;
 }

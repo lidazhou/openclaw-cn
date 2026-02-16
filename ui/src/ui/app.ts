@@ -490,3 +490,6 @@ export class OpenClawApp extends LitElement {
     return renderApp(this as unknown as AppViewState);
   }
 }
+
+/** Backward-compat alias used by tests, app-gateway, app-chat, etc. */
+export { OpenClawApp as ClawdbotApp };
