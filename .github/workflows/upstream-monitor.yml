@@ -44,8 +44,8 @@ jobs:
           if [ -z "$LAST_TAG" ]; then
             LAST_TAG=$(grep -oE 'v2026\.[0-9]+\.[0-9]+(-[0-9]+)?' "$CHECKLIST_FILE" 2>/dev/null | sort -V | tail -1)
           fi
-          echo "last_tag=${LAST_TAG:-v2026.1.29}" >> "$GITHUB_OUTPUT"
-          echo "Last checked upstream tag: ${LAST_TAG:-v2026.1.29}"
+          echo "last_tag=${LAST_TAG:-v2026.2.14}" >> "$GITHUB_OUTPUT"
+          echo "Last checked upstream tag: ${LAST_TAG:-v2026.2.14}"
 
       - name: Check for new upstream releases
         id: check
