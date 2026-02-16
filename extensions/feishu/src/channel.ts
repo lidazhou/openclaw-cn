@@ -13,6 +13,7 @@ import {
   listFeishuDirectoryPeersLive,
   listFeishuDirectoryGroupsLive,
 } from "./directory.js";
+import { monitorFeishuProvider } from "./monitor.js";
 import { feishuOnboardingAdapter } from "./onboarding.js";
 import { feishuOutbound } from "./outbound.js";
 import { resolveFeishuGroupToolPolicy } from "./policy.js";
@@ -340,7 +341,6 @@ export const feishuPlugin: ChannelPlugin<ResolvedFeishuAccount> = {
   },
   gateway: {
     startAccount: async (ctx) => {
-      const { monitorFeishuProvider } = await import("./monitor.js");
       const account = resolveFeishuAccount({ cfg: ctx.cfg, accountId: ctx.accountId });
       const port = account.config?.webhookPort ?? null;
       ctx.setStatus({ accountId: ctx.accountId, port });

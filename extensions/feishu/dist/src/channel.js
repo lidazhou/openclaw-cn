@@ -1,6 +1,7 @@
 import { DEFAULT_ACCOUNT_ID, PAIRING_APPROVED_MESSAGE } from "openclaw/plugin-sdk";
 import { resolveFeishuAccount, listFeishuAccountIds, resolveDefaultFeishuAccountId, } from "./accounts.js";
 import { listFeishuDirectoryPeers, listFeishuDirectoryGroups, listFeishuDirectoryPeersLive, listFeishuDirectoryGroupsLive, } from "./directory.js";
+import { monitorFeishuProvider } from "./monitor.js";
 import { feishuOnboardingAdapter } from "./onboarding.js";
 import { feishuOutbound } from "./outbound.js";
 import { resolveFeishuGroupToolPolicy } from "./policy.js";
@@ -314,7 +315,6 @@ export const feishuPlugin = {
     },
     gateway: {
         startAccount: async (ctx) => {
-            const { monitorFeishuProvider } = await import("./monitor.js");
             const account = resolveFeishuAccount({ cfg: ctx.cfg, accountId: ctx.accountId });
             const port = account.config?.webhookPort ?? null;
             ctx.setStatus({ accountId: ctx.accountId, port });
