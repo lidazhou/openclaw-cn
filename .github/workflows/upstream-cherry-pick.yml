@@ -295,6 +295,7 @@ jobs:
               --field to_tag="${{ steps.tags.outputs.to }}" \
               --field priority="${{ inputs.priority }}" \
               --field issue_number="${{ inputs.issue_number }}" \
+              --field max_issues=0 \
               --field dry_run=false
             echo "✅ 已触发 upstream-copilot-resolve workflow"
           else
