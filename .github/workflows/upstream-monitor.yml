@@ -256,47 +256,38 @@ jobs:
           # 保存原始响应到文件（避免 shell 变量截断大 JSON）
           printf '%s\n' "$RESPONSE" > /tmp/ai-raw-response.txt
 
-          # 预处理: 去除 markdown code fence (```json 或 ```)
+          # 预处理: 清理常见 AI 输出格式问题
+          # 1. 去除 markdown code fence
           sed -i 's/^```json$//' /tmp/ai-raw-response.txt
           sed -i 's/^```$//' /tmp/ai-raw-response.txt
-          # 预处理: 修复常见 AI JSON 错误（数组末尾多余逗号）
-          sed -i 's/,\s*$//' /tmp/ai-raw-response.txt
-          # 去除空行
+          # 2. 去除空行
+          sed -i '/^[[:space:]]*$/d' /tmp/ai-raw-response.txt
+          # 3. 去除独立的 [ 和 ] 行（配合下面的 jq -s 重建数组）
+          sed -i '/^\[$/d' /tmp/ai-raw-response.txt
+          sed -i '/^\]$/d' /tmp/ai-raw-response.txt
+          # 4. 去除行尾逗号（AI 有时加逗号有时不加，统一去掉后用 jq -s 重建）
+          sed -i 's/,$//' /tmp/ai-raw-response.txt
+          # 5. 再次去除空行
           sed -i '/^[[:space:]]*$/d' /tmp/ai-raw-response.txt
 
-          # 直接用文件解析（不经过 shell 变量传递）
+          echo "预处理后内容 (前5行):"
+          head -5 /tmp/ai-raw-response.txt
+
+          # 现在文件是纯 JSONL（每行一个 JSON 对象，无 [ ] 无逗号）
+          # 用 jq -s 把 JSONL 合并为数组
           AI_DECISIONS=""
-
-          # 策略1: 整个文件就是 JSON 数组
-          if AI_DECISIONS=$(jq -c 'if type == "array" then . else empty end' /tmp/ai-raw-response.txt 2>/tmp/jq-err.txt); then
-            [ -n "$AI_DECISIONS" ] || AI_DECISIONS=""
-          else
-            echo "策略1失败: $(cat /tmp/jq-err.txt)"
-            AI_DECISIONS=""
-          fi
-
-          # 策略2: 提取从第一个 [ 到最后一个 ] 的内容
-          if [ -z "$AI_DECISIONS" ]; then
-            FIRST_BRACKET=$(grep -n '^\[' /tmp/ai-raw-response.txt | head -1 | cut -d: -f1)
-            LAST_BRACKET=$(grep -n '^\]' /tmp/ai-raw-response.txt | tail -1 | cut -d: -f1)
-            if [ -n "$FIRST_BRACKET" ] && [ -n "$LAST_BRACKET" ]; then
-              if AI_DECISIONS=$(sed -n "${FIRST_BRACKET},${LAST_BRACKET}p" /tmp/ai-raw-response.txt | jq -c '.' 2>/tmp/jq-err.txt); then
-                [ -n "$AI_DECISIONS" ] || AI_DECISIONS=""
-              else
-                echo "策略2失败: $(cat /tmp/jq-err.txt)"
-                AI_DECISIONS=""
-              fi
-            fi
-          fi
-
-          # 策略3: 逐行拼接成 JSON 数组
-          if [ -z "$AI_DECISIONS" ]; then
-            if AI_DECISIONS=$(jq -sc 'flatten' /tmp/ai-raw-response.txt 2>/tmp/jq-err.txt); then
-              [ -n "$AI_DECISIONS" ] && [ "$AI_DECISIONS" != "[]" ] || AI_DECISIONS=""
-            else
-              echo "策略3失败: $(cat /tmp/jq-err.txt)"
+          if AI_DECISIONS=$(jq -sc '.' /tmp/ai-raw-response.txt 2>/tmp/jq-err.txt); then
+            # 验证是非空数组
+            AI_LEN=$(printf '%s\n' "$AI_DECISIONS" | jq 'if type == "array" then length else 0 end' 2>/dev/null || echo "0")
+            if [ "$AI_LEN" -eq 0 ]; then
+              echo "jq -s 返回空数组"
               AI_DECISIONS=""
+            else
+              echo "✅ 解析成功: $AI_LEN 条 AI 决策"
             fi
+          else
+            echo "jq -s 失败: $(cat /tmp/jq-err.txt)"
+            AI_DECISIONS=""
           fi
 
           if [ -z "$AI_DECISIONS" ] || [ "$AI_DECISIONS" = "null" ]; then
