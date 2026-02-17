@@ -219,7 +219,7 @@ jobs:
           # ---- 调用 AI API ----
           if [ "$AI_PROVIDER" = "anthropic" ]; then
             REQUEST_BODY=$(jq -n --arg model "$MODEL" --rawfile prompt /tmp/ai-prompt.txt '{
-              model: $model, max_tokens: 8192,
+              model: $model, max_tokens: 32768,
               messages: [{role: "user", content: $prompt}]
             }')
             curl -s "${BASE_URL}/v1/messages" \
@@ -232,7 +232,7 @@ jobs:
             REQUEST_BODY=$(jq -n --arg model "$MODEL" --rawfile prompt /tmp/ai-prompt.txt '{
               model: $model,
               messages: [{role: "user", content: $prompt}],
-              max_tokens: 8192, temperature: 0.1
+              max_tokens: 32768, temperature: 0.1
             }')
             curl -s "${BASE_URL}/chat/completions" \
               -H "Content-Type: application/json" \
@@ -270,8 +270,18 @@ jobs:
           # 5. 再次去除空行
           sed -i '/^[[:space:]]*$/d' /tmp/ai-raw-response.txt
 
-          echo "预处理后内容 (前5行):"
-          head -5 /tmp/ai-raw-response.txt
+          # 处理 AI 输出被截断的情况：删除最后一行不完整的 JSON
+          TOTAL_LINES=$(wc -l < /tmp/ai-raw-response.txt)
+          echo "预处理后: $TOTAL_LINES 行"
+          head -3 /tmp/ai-raw-response.txt
+          # 检查最后一行是否是完整 JSON 对象
+          LAST_LINE=$(tail -1 /tmp/ai-raw-response.txt)
+          if ! printf '%s' "$LAST_LINE" | jq '.' >/dev/null 2>&1; then
+            echo "⚠️ 最后一行不完整（AI 输出被截断），已删除: ${LAST_LINE:0:60}..."
+            sed -i '$ d' /tmp/ai-raw-response.txt
+            TOTAL_LINES=$(wc -l < /tmp/ai-raw-response.txt)
+            echo "截断后剩余: $TOTAL_LINES 行"
+          fi
 
           # 现在文件是纯 JSONL（每行一个 JSON 对象，无 [ ] 无逗号）
           # 用 jq -s 把 JSONL 合并为数组
