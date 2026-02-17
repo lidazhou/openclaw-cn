@@ -50,10 +50,22 @@ export async function applyAuthChoiceMiniMax(
   if (
     params.authChoice === "minimax-cloud" ||
     params.authChoice === "minimax-api" ||
-    params.authChoice === "minimax-api-lightning"
+    params.authChoice === "minimax-api-lightning" ||
+    params.authChoice === "minimax-api-m25" ||
+    params.authChoice === "minimax-api-m25-highspeed" ||
+    params.authChoice === "minimax-api-m21-highspeed" ||
+    params.authChoice === "minimax-api-m2"
   ) {
-    const modelId =
-      params.authChoice === "minimax-api-lightning" ? "MiniMax-M2.5-Lightning" : "MiniMax-M2.5";
+    const modelIdMap: Record<string, string> = {
+      "minimax-api-m25": "MiniMax-M2.5",
+      "minimax-api-m25-highspeed": "MiniMax-M2.5-highspeed",
+      "minimax-api-lightning": "MiniMax-M2.5-Lightning",
+      "minimax-api": "MiniMax-M2.1",
+      "minimax-api-m21-highspeed": "MiniMax-M2.1-highspeed",
+      "minimax-api-m2": "MiniMax-M2",
+      "minimax-cloud": "MiniMax-M2.5",
+    };
+    const modelId = modelIdMap[params.authChoice] ?? "MiniMax-M2.5";
     let hasCredential = false;
     const envKey = resolveEnvApiKey("minimax");
     if (envKey) {

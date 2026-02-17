@@ -58,7 +58,15 @@ const AUTH_CHOICE_GROUP_DEFS: {
     value: "minimax",
     label: "MiniMax",
     hint: "M2.1 (recommended)",
-    choices: ["minimax-portal", "minimax-api", "minimax-api-lightning"],
+    choices: [
+      "minimax-portal",
+      "minimax-api-m25",
+      "minimax-api-m25-highspeed",
+      "minimax-api",
+      "minimax-api-lightning",
+      "minimax-api-m21-highspeed",
+      "minimax-api-m2",
+    ],
   },
   {
     value: "moonshot",
@@ -241,11 +249,27 @@ export function buildAuthChoiceOptions(params: {
     label: "OpenCode Zen (multi-model proxy)",
     hint: "Claude, GPT, Gemini via opencode.ai/zen",
   });
+  options.push({ value: "minimax-api-m25", label: "MiniMax M2.5", hint: "顶尖性能与极致性价比" });
+  options.push({
+    value: "minimax-api-m25-highspeed",
+    label: "MiniMax M2.5 Highspeed",
+    hint: "极速版：效果不变，更快更敏捷 (~100 TPS)",
+  });
   options.push({ value: "minimax-api", label: "MiniMax M2.1" });
   options.push({
     value: "minimax-api-lightning",
     label: "MiniMax M2.1 Lightning",
     hint: "Faster, higher output cost",
+  });
+  options.push({
+    value: "minimax-api-m21-highspeed",
+    label: "MiniMax M2.1 Highspeed",
+    hint: "极速版：效果不变，更快更敏捷 (~100 TPS)",
+  });
+  options.push({
+    value: "minimax-api-m2",
+    label: "MiniMax M2",
+    hint: "专为高效编码与 Agent 工作流而生",
   });
   // 新增：OpenAI兼容供应商API Key选项
   options.push({ value: "siliconflow-api-key", label: "硅基流动 API key" });

@@ -439,7 +439,11 @@ export async function applyNonInteractiveAuthChoice(params: {
   if (
     authChoice === "minimax-cloud" ||
     authChoice === "minimax-api" ||
-    authChoice === "minimax-api-lightning"
+    authChoice === "minimax-api-lightning" ||
+    authChoice === "minimax-api-m25" ||
+    authChoice === "minimax-api-m25-highspeed" ||
+    authChoice === "minimax-api-m21-highspeed" ||
+    authChoice === "minimax-api-m2"
   ) {
     const resolved = await resolveNonInteractiveApiKey({
       provider: "minimax",
@@ -460,8 +464,16 @@ export async function applyNonInteractiveAuthChoice(params: {
       provider: "minimax",
       mode: "api_key",
     });
-    const modelId =
-      authChoice === "minimax-api-lightning" ? "MiniMax-M2.1-lightning" : "MiniMax-M2.1";
+    const modelIdMap: Record<string, string> = {
+      "minimax-api-m25": "MiniMax-M2.5",
+      "minimax-api-m25-highspeed": "MiniMax-M2.5-highspeed",
+      "minimax-api-lightning": "MiniMax-M2.1-lightning",
+      "minimax-api": "MiniMax-M2.1",
+      "minimax-api-m21-highspeed": "MiniMax-M2.1-highspeed",
+      "minimax-api-m2": "MiniMax-M2",
+      "minimax-cloud": "MiniMax-M2.1",
+    };
+    const modelId = modelIdMap[authChoice] ?? "MiniMax-M2.1";
     return applyMinimaxApiConfig(nextConfig, modelId);
   }
 
