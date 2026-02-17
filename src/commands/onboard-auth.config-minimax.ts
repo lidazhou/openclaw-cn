@@ -165,7 +165,7 @@ export function applyMinimaxApiProviderConfig(
   providers.minimax = {
     ...existingProviderRest,
     baseUrl: MINIMAX_API_BASE_URL,
-    api: "anthropic-messages",
+    api: "openai-completions",
     ...(normalizedApiKey?.trim() ? { apiKey: normalizedApiKey } : {}),
     models: mergedModels.length > 0 ? mergedModels : [apiModel],
   };

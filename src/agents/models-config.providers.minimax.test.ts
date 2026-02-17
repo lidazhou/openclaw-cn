@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { resolveImplicitProviders } from "./models-config.providers.js";
 
 describe("MiniMax implicit provider (#15275)", () => {
-  it("should use anthropic-messages API for API-key provider", async () => {
+  it("should use openai-completions API for API-key provider", async () => {
     const agentDir = mkdtempSync(join(tmpdir(), "openclaw-test-"));
     const previous = process.env.MINIMAX_API_KEY;
     process.env.MINIMAX_API_KEY = "test-key";
@@ -13,8 +13,8 @@ describe("MiniMax implicit provider (#15275)", () => {
     try {
       const providers = await resolveImplicitProviders({ agentDir });
       expect(providers?.minimax).toBeDefined();
-      expect(providers?.minimax?.api).toBe("anthropic-messages");
-      expect(providers?.minimax?.baseUrl).toBe("https://api.minimax.io/anthropic");
+      expect(providers?.minimax?.api).toBe("openai-completions");
+      expect(providers?.minimax?.baseUrl).toBe("https://api.minimax.chat/v1");
     } finally {
       if (previous === undefined) {
         delete process.env.MINIMAX_API_KEY;
