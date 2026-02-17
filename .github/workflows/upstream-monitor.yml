@@ -1,67 +1,54 @@
 name: Upstream Release Monitor
-# 监听上游 openclaw/openclaw 的新 Release 发布
-# 使用 AI Agent 判断是否需要合并到本 fork
+# 每日自动检测上游 openclaw/openclaw 新 Release
+# 检测 → 提取分类 → 创建 Issue → 自动 cherry-pick → 创建 PR
 
 on:
   schedule:
-    # 每天 UTC 08:00（北京时间 16:00）检查上游新 Release
+    # 每天 UTC 08:00（北京时间 16:00）
     - cron: '0 8 * * *'
   workflow_dispatch:
-    inputs:
-      force_check:
-        description: '强制检查所有未处理的上游 Release'
-        type: boolean
-        default: false
 
 permissions:
   contents: write
   issues: write
 
 env:
-  UPSTREAM_REPO: "openclaw/openclaw"
-  CHECKLIST_FILE: "UPSTREAM_MERGE_CHECKLIST.md"
-  # 持久化标记文件，记录已处理的最新上游版本
-  LAST_TAG_FILE: ".github/last-upstream-tag"
+  UPSTREAM_REPO: openclaw/openclaw
+  LAST_TAG_FILE: .github/last-upstream-tag
 
 jobs:
+  # ================================================================
+  # Job 1: 检测上游新 Release
+  # ================================================================
   check-upstream:
     runs-on: ubuntu-latest
     outputs:
-      has_new_releases: ${{ steps.check.outputs.has_new }}
-      new_releases: ${{ steps.check.outputs.releases }}
+      has_new: ${{ steps.check.outputs.has_new }}
       latest_tag: ${{ steps.check.outputs.latest_tag }}
+      prev_tag: ${{ steps.check.outputs.prev_tag }}
+      release_tags: ${{ steps.check.outputs.release_tags }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get last checked release tag
-        id: last_checked
-        run: |
-          # 优先从标记文件读取已处理的最新版本
-          if [ -f "$LAST_TAG_FILE" ]; then
-            LAST_TAG=$(cat "$LAST_TAG_FILE" | tr -d '[:space:]')
-          fi
-          # 回退：从清单文件提取
-          if [ -z "$LAST_TAG" ]; then
-            LAST_TAG=$(grep -oE 'v2026\.[0-9]+\.[0-9]+(-[0-9]+)?' "$CHECKLIST_FILE" 2>/dev/null | sort -V | tail -1)
-          fi
-          echo "last_tag=${LAST_TAG:-v2026.2.14}" >> "$GITHUB_OUTPUT"
-          echo "Last checked upstream tag: ${LAST_TAG:-v2026.2.14}"
-
-      - name: Check for new upstream releases
+      - name: Detect new upstream releases
         id: check
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          LAST_TAG="${{ steps.last_checked.outputs.last_tag }}"
-          echo "Checking for releases newer than $LAST_TAG..."
+          # 读取基准版本
+          PREV_TAG="v2026.1.29"
+          if [ -f "$LAST_TAG_FILE" ]; then
+            PREV_TAG=$(cat "$LAST_TAG_FILE" | tr -d '[:space:]')
+          fi
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          echo "Baseline: $PREV_TAG"
 
-          # 获取上游所有非草稿、非预发布 Release
-          # 使用数值版本比较（避免字符串字典序问题：v2026.2.2 > v2026.2.14）
+          # 获取上游正式 Release（排除草稿和预发布）
           RELEASES=$(gh api "repos/$UPSTREAM_REPO/releases" --paginate \
-            --jq "[.[] | select(.draft == false and .prerelease == false) | {tag: .tag_name, date: .published_at, body: .body}]")
+            --jq "[.[] | select(.draft == false and .prerelease == false) | {tag: .tag_name}]")
 
-          # 按版本号数值过滤：只保留比 LAST_TAG 更新的 release
-          RELEASES=$(echo "$RELEASES" | jq -c --arg last "$LAST_TAG" '
+          # 数值版本比较过滤
+          NEW=$(echo "$RELEASES" | jq -c --arg last "$PREV_TAG" '
             def ver: ltrimstr("v") | split("-")[0] | split(".") | map(tonumber);
             [.[] | select(
               (.tag | ver) as $t | ($last | ver) as $l |
@@ -70,289 +57,219 @@ jobs:
               ($t[0] == $l[0] and $t[1] == $l[1] and ($t[2] // 0) > ($l[2] // 0))
             )]')
 
-          COUNT=$(echo "$RELEASES" | jq 'length')
+          COUNT=$(echo "$NEW" | jq 'length')
           echo "Found $COUNT new release(s)"
 
           if [ "$COUNT" -gt 0 ]; then
             echo "has_new=true" >> "$GITHUB_OUTPUT"
-            # 记录本批次最新的 tag（按版本号数值排序）
-            LATEST=$(echo "$RELEASES" | jq -r '
+            LATEST=$(echo "$NEW" | jq -r '
               def ver: ltrimstr("v") | split("-")[0] | split(".") | map(tonumber);
               [.[] | .tag] | sort_by(. | ver) | last')
             echo "latest_tag=$LATEST" >> "$GITHUB_OUTPUT"
-            echo "Latest tag in batch: $LATEST"
-            # 保存 release 数据供后续步骤使用
-            echo "$RELEASES" > /tmp/new-releases.json
-            echo "releases<<RELEASES_EOF" >> "$GITHUB_OUTPUT"
-            cat /tmp/new-releases.json >> "$GITHUB_OUTPUT"
-            echo "RELEASES_EOF" >> "$GITHUB_OUTPUT"
+            TAGS=$(echo "$NEW" | jq -r '[.[].tag] | join(", ")')
+            echo "release_tags=$TAGS" >> "$GITHUB_OUTPUT"
           else
             echo "has_new=false" >> "$GITHUB_OUTPUT"
           fi
 
-  analyze-releases:
+  # ================================================================
+  # Job 2: 提取 commit、创建 Issue、更新基准
+  # ================================================================
+  extract-and-notify:
     needs: check-upstream
-    if: needs.check-upstream.outputs.has_new_releases == 'true'
+    if: needs.check-upstream.outputs.has_new == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      issue_number: ${{ steps.issue.outputs.number }}
+      merge_count: ${{ steps.stats.outputs.merge_count }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Save release data
+      - name: Setup upstream remote
         run: |
-          cat << 'RELEASES_JSON' > /tmp/new-releases.json
-          ${{ needs.check-upstream.outputs.new_releases }}
-          RELEASES_JSON
+          git remote add upstream "https://github.com/$UPSTREAM_REPO.git" 2>/dev/null || true
+          git fetch upstream --tags
 
-      - name: Analyze with AI Agent
-        id: analyze
+      - name: Extract and categorize commits
+        run: |
+          chmod +x scripts/upstream-extract-commits.sh
+          ./scripts/upstream-extract-commits.sh \
+            "${{ needs.check-upstream.outputs.prev_tag }}" \
+            "${{ needs.check-upstream.outputs.latest_tag }}" \
+            > /tmp/commits.json 2>/tmp/extract.log
+          cat /tmp/extract.log
+
+      - name: Calculate statistics
+        id: stats
+        run: |
+          f() { jq "$1" /tmp/commits.json; }
+          echo "total=$(f 'length')" >> "$GITHUB_OUTPUT"
+          echo "merge_count=$(f '[.[] | select(.action == "MERGE")] | length')" >> "$GITHUB_OUTPUT"
+          echo "p0=$(f '[.[] | select(.priority == "P0" and .action == "MERGE")] | length')" >> "$GITHUB_OUTPUT"
+          echo "p1=$(f '[.[] | select(.priority == "P1" and .action == "MERGE")] | length')" >> "$GITHUB_OUTPUT"
+          echo "review=$(f '[.[] | select(.action == "REVIEW")] | length')" >> "$GITHUB_OUTPUT"
+          echo "skip=$(f '[.[] | select(.action == "SKIP")] | length')" >> "$GITHUB_OUTPUT"
+          echo "optional=$(f '[.[] | select(.action == "OPTIONAL")] | length')" >> "$GITHUB_OUTPUT"
+
+      - name: Create issue with embedded checklist
+        id: issue
         env:
-          AI_API_KEY: ${{ secrets.AI_API_KEY }}
-          # 支持的供应商: deepseek (推荐), siliconflow, zhipu, moonshot, qwen, openai, anthropic
-          AI_PROVIDER: ${{ vars.AI_PROVIDER || 'deepseek' }}
-          # 可选：自定义 API base URL（覆盖供应商默认值）
-          AI_BASE_URL: ${{ vars.AI_BASE_URL || '' }}
-          # 可选：自定义模型名称（覆盖供应商默认值）
-          AI_MODEL: ${{ vars.AI_MODEL || '' }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 提取 release notes 的每一条变更
-          RELEASE_BODY=$(cat /tmp/new-releases.json | jq -r '.[].body')
+          PREV="${{ needs.check-upstream.outputs.prev_tag }}"
+          LATEST="${{ needs.check-upstream.outputs.latest_tag }}"
+          TAGS="${{ needs.check-upstream.outputs.release_tags }}"
 
-          # 根据供应商设置 API 参数
-          case "$AI_PROVIDER" in
-            deepseek)
-              BASE_URL="${AI_BASE_URL:-https://api.deepseek.com/v1}"
-              MODEL="${AI_MODEL:-deepseek-chat}"
-              ;;
-            siliconflow)
-              BASE_URL="${AI_BASE_URL:-https://api.siliconflow.cn/v1}"
-              MODEL="${AI_MODEL:-deepseek-ai/DeepSeek-V3}"
-              ;;
-            moonshot)
-              BASE_URL="${AI_BASE_URL:-https://api.moonshot.cn/v1}"
-              MODEL="${AI_MODEL:-moonshot-v1-128k}"
-              ;;
-            qwen)
-              BASE_URL="${AI_BASE_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1}"
-              MODEL="${AI_MODEL:-qwen-max}"
-              ;;
-            zhipu)
-              BASE_URL="${AI_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}"
-              MODEL="${AI_MODEL:-glm-4-plus}"
-              ;;
-            openai)
-              BASE_URL="${AI_BASE_URL:-https://api.openai.com/v1}"
-              MODEL="${AI_MODEL:-gpt-4o}"
-              ;;
-            anthropic)
-              BASE_URL="${AI_BASE_URL:-https://api.anthropic.com}"
-              MODEL="${AI_MODEL:-claude-sonnet-4-20250514}"
-              ;;
-            *)
-              # 自定义 OpenAI 兼容供应商
-              BASE_URL="${AI_BASE_URL}"
-              MODEL="${AI_MODEL:-gpt-4o}"
-              ;;
-          esac
-
-          echo "Using provider: $AI_PROVIDER, model: $MODEL, base: $BASE_URL"
-
-          # 构造 AI prompt
-          cat << 'PROMPT_EOF' > /tmp/analysis-prompt.txt
-          你是一个代码合并分析 Agent。你的任务是分析上游 openclaw/openclaw 项目的 Release 变更，
-          判断哪些需要合并到 openclaw-cn（中文本地化 fork）。
-
-          ## 合并判断规则
-
-          ### 必须合并（设为 MERGE）:
-          1. 所有安全修复（Security/SSRF/XSS/injection/traversal/auth/CSRF 相关）
-          2. 核心引擎 bug 修复（Gateway/Sessions/Agents/Cron/Heartbeat/Compaction）
-          3. 内存泄漏/资源泄漏修复
-          4. 中国相关 Provider 支持（Moonshot/智谱/MiniMax/火山引擎/通义千问等）
-          5. 使用中渠道的 bug 修复：Telegram、Discord、WhatsApp、Slack、Signal、飞书/Feishu、Web UI、TUI
-          6. 新模型支持（Opus/Codex/GLM 等）
-          7. QMD 记忆系统修复（需标注"需对比本地实现"）
-          8. 流式输出修复
-          9. Config/配置系统修复
-          10. CJK/Unicode/中文相关修复
-
-          ### 可选合并（设为 OPTIONAL）:
-          1. 新功能增强（Web UI 新界面等）
-          2. 文档更新
-          3. CLI 改善
-          4. 非关键的 UI 调整
-          5. 测试改进
-
-          ### 跳过（设为 SKIP）:
-          1. 未使用渠道的修复：BlueBubbles、Tlon、Nostr、MS Teams、Twitch、Google Chat、iMessage、Mattermost、Nextcloud Talk、Line
-          2. iOS/Android 原生应用修改
-          3. macOS 应用专属修改（除非涉及 CJK/中文）
-          4. CI/CD 流水线修改
-          5. 纯测试代码（除非修复了使用中渠道的测试）
-
-          ## 输出格式
-
-          对每条变更输出一行 JSON：
-          ```json
-          {"action": "MERGE|OPTIONAL|SKIP", "priority": "P0|P1|P2|P3|P4|P5", "pr": "#XXXX", "release": "v2026.X.X", "description": "...", "category": "SECURITY|CRITICAL-BUG|CORE-FEATURE|MODEL|CHANNEL-FIX|NICE-TO-HAVE", "notes": "...", "conflict_risk": "LOW|MEDIUM|HIGH"}
-          ```
-
-          ## 上游 Release Notes
-
-          PROMPT_EOF
-
-          echo "$RELEASE_BODY" >> /tmp/analysis-prompt.txt
-
-          # 调用 AI API（所有中国供应商均兼容 OpenAI 格式）
-          # 使用 --rawfile 直接读取提示文件，避免 shell 转义导致 jq 解析失败
-          if [ "$AI_PROVIDER" = "anthropic" ]; then
-            REQUEST_BODY=$(jq -n --arg model "$MODEL" --rawfile prompt /tmp/analysis-prompt.txt '{
-              model: $model,
-              max_tokens: 8192,
-              messages: [{role: "user", content: $prompt}]
-            }')
-          else
-            # OpenAI 兼容格式（DeepSeek/SiliconFlow/Moonshot/Qwen/智谱/OpenAI 通用）
-            REQUEST_BODY=$(jq -n --arg model "$MODEL" --rawfile prompt /tmp/analysis-prompt.txt '{
-              model: $model,
-              messages: [{role: "user", content: $prompt}],
-              max_tokens: 8192,
-              temperature: 0.1
-            }')
-          fi
-
-          # 分离 curl 调用和 jq 解析，便于调试
-          if [ "$AI_PROVIDER" = "anthropic" ]; then
-            curl -s "${BASE_URL}/v1/messages" \
-              -H "Content-Type: application/json" \
-              -H "x-api-key: $AI_API_KEY" \
-              -H "anthropic-version: 2023-06-01" \
-              -d "$REQUEST_BODY" > /tmp/api-response.json
-            RESPONSE=$(jq -r '.content[0].text' /tmp/api-response.json 2>/dev/null)
-          else
-            curl -s "${BASE_URL}/chat/completions" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: Bearer $AI_API_KEY" \
-              -d "$REQUEST_BODY" > /tmp/api-response.json
-            RESPONSE=$(jq -r '.choices[0].message.content' /tmp/api-response.json 2>/dev/null)
-          fi
-
-          if [ -z "$RESPONSE" ] || [ "$RESPONSE" = "null" ]; then
-            echo "::error::AI API call failed. Response:"
-            cat /tmp/api-response.json || true
-            exit 1
-          fi
-
-          echo "$RESPONSE" > /tmp/analysis-result.txt
-          echo "Analysis complete (${#RESPONSE} chars)"
-
-      - name: Update checklist
-        run: |
-          # 解析 AI 分析结果，追加到清单文件
-          RESULT=$(cat /tmp/analysis-result.txt)
-
-          # 提取所有 MERGE 和 OPTIONAL 条目
-          MERGE_ITEMS=$(echo "$RESULT" | grep -o '{.*}' | jq -c 'select(.action == "MERGE" or .action == "OPTIONAL")' 2>/dev/null || true)
-
-          if [ -z "$MERGE_ITEMS" ]; then
-            echo "No new items to merge"
+          # 去重检查
+          EXISTING=$(gh issue list --label "upstream" --state open \
+            --search "$LATEST in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "number=$EXISTING" >> "$GITHUB_OUTPUT"
+            echo "Issue #$EXISTING already exists, skipping"
             exit 0
           fi
 
-          # 获取当前日期
-          TODAY=$(date +%Y-%m-%d)
+          P0="${{ steps.stats.outputs.p0 }}"
+          P1="${{ steps.stats.outputs.p1 }}"
+          MERGE="${{ steps.stats.outputs.merge_count }}"
+          REVIEW="${{ steps.stats.outputs.review }}"
+          SKIP="${{ steps.stats.outputs.skip }}"
+          OPTIONAL="${{ steps.stats.outputs.optional }}"
+          TOTAL="${{ steps.stats.outputs.total }}"
 
-          # 追加新发现的条目到清单
+          # 构建 Issue 内容
           {
+            echo "## 上游新 Release: $TAGS"
+            echo ""
+            echo "**范围**: \`$PREV\` → \`$LATEST\` | 共 **$TOTAL** 个 commit"
+            echo ""
+            echo "### 📊 分类摘要"
+            echo ""
+            echo "| 类别 | 数量 | 处理方式 |"
+            echo "|------|------|----------|"
+            echo "| 🔴 P0 安全修复 | **$P0** | 自动 cherry-pick |"
+            echo "| 🟠 P1 关键修复 | **$P1** | 自动 cherry-pick |"
+            echo "| 👁 需人工审查 | **$REVIEW** | 手动处理 |"
+            echo "| 🔵 可选 | **$OPTIONAL** | 按需 |"
+            echo "| ⚪ 已跳过 | **$SKIP** | 不使用的渠道/CI/docs |"
             echo ""
             echo "---"
             echo ""
-            echo "## 自动扫描新增条目 ($TODAY)"
+            echo "### ✅ 自动合并清单 (P0+P1)"
             echo ""
-            echo "| 状态 | 优先级 | 上游 PR | Release | 描述 | 类别 | 冲突风险 | 备注 |"
-            echo "|------|--------|---------|---------|------|------|----------|------|"
+            if [ "$MERGE" -gt 0 ]; then
+              echo "| 状态 | 优先级 | Commit | 描述 | 类别 | 风险 |"
+              echo "|------|--------|--------|------|------|------|"
+              jq -r '.[] | select(.action == "MERGE") |
+                "| ⏳ | \(.priority) | `\(.sha[:10])` | \(.message | gsub("[|]"; "/")) | \(.category) | \(.conflict_risk) |"' \
+                /tmp/commits.json
+            else
+              echo "_无需合并的 commit_"
+            fi
+            echo ""
+            echo "> 🤖 自动 cherry-pick PR 创建后将在下方评论更新结果"
+            echo ""
+            if [ "$REVIEW" -gt 0 ]; then
+              echo "### 👁 需人工审查"
+              echo ""
+              echo "| Commit | 描述 | 类别 | 备注 |"
+              echo "|--------|------|------|------|"
+              jq -r '.[] | select(.action == "REVIEW") |
+                "| `\(.sha[:10])` | \(.message | gsub("[|]"; "/")) | \(.category) | 需对比本地实现 |"' \
+                /tmp/commits.json
+              echo ""
+            fi
+            if [ "$OPTIONAL" -gt 0 ]; then
+              echo "<details>"
+              echo "<summary>🔵 可选合并 ($OPTIONAL 个)</summary>"
+              echo ""
+              echo "| Commit | 描述 | 类别 |"
+              echo "|--------|------|------|"
+              jq -r '.[] | select(.action == "OPTIONAL") |
+                "| `\(.sha[:10])` | \(.message | gsub("[|]"; "/") | .[0:80]) | \(.category) |"' \
+                /tmp/commits.json | head -50
+              echo ""
+              echo "</details>"
+              echo ""
+            fi
+            echo "<details>"
+            echo "<summary>⚪ 已跳过 ($SKIP 个)</summary>"
+            echo ""
+            echo "| Commit | 描述 | 类别 |"
+            echo "|--------|------|------|"
+            jq -r '.[] | select(.action == "SKIP") |
+              "| `\(.sha[:10])` | \(.message | gsub("[|]"; "/") | .[0:60]) | \(.category) |"' \
+              /tmp/commits.json | head -50
+            SKIP_INT=$(jq '[.[] | select(.action == "SKIP")] | length' /tmp/commits.json)
+            if [ "$SKIP_INT" -gt 50 ]; then
+              echo ""
+              echo "_... 及其他 $((SKIP_INT - 50)) 个 commit_"
+            fi
+            echo ""
+            echo "</details>"
+            echo ""
+            echo "---"
+            echo ""
+            echo "### 🔧 手动补充操作"
+            echo ""
+            echo '```bash'
+            echo "# 审查项"
+            echo "./scripts/upstream-cherry-pick.sh --priority P2 --dry-run"
+            echo "# 可选项"
+            echo "./scripts/upstream-cherry-pick.sh --priority P0,P1,P2,P3 --dry-run"
+            echo '```'
+            echo ""
+            echo "或: **Actions → Upstream Cherry-Pick** → 选择优先级"
+            echo ""
+            echo "### 🛡 Cherry-pick 保护机制"
+            echo "自动恢复本地文件: \`docs/\` \`extensions/feishu/\` \`package.json\` \`.github/workflows/\` \`CHANGELOG.md\` \`README.md\`"
+          } > /tmp/issue-body.md
 
-            echo "$MERGE_ITEMS" | while IFS= read -r item; do
-              ACTION=$(echo "$item" | jq -r '.action')
-              PRIORITY=$(echo "$item" | jq -r '.priority')
-              PR=$(echo "$item" | jq -r '.pr')
-              RELEASE=$(echo "$item" | jq -r '.release')
-              DESC=$(echo "$item" | jq -r '.description')
-              CATEGORY=$(echo "$item" | jq -r '.category')
-              RISK=$(echo "$item" | jq -r '.conflict_risk')
-              NOTES=$(echo "$item" | jq -r '.notes')
-              STATUS="⬜"
-              [ "$ACTION" = "OPTIONAL" ] && STATUS="🔲"
-              echo "| $STATUS | $PRIORITY | $PR | $RELEASE | $DESC | $CATEGORY | $RISK | $NOTES |"
-            done
-          } >> "$CHECKLIST_FILE"
+          gh label create upstream --description "上游变更追踪" --color "0075ca" 2>/dev/null || true
 
-      - name: Update last checked tag and commit
-        env:
-          LATEST_TAG: ${{ needs.check-upstream.outputs.latest_tag }}
+          ISSUE_URL=$(gh issue create \
+            --title "上游更新: $TAGS — ${P0} P0 + ${P1} P1 待合并" \
+            --body-file /tmp/issue-body.md \
+            --label "upstream")
+
+          NUMBER=$(echo "$ISSUE_URL" | grep -oE '[0-9]+$')
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Created issue #$NUMBER"
+
+      - name: Update baseline tag
         run: |
           git config user.name "upstream-monitor[bot]"
           git config user.email "bot@openclaw-cn.dev"
 
-          # 无论分析结果如何，都更新标记文件以避免重复检测
-          mkdir -p "$(dirname "$LAST_TAG_FILE")"
-          echo "$LATEST_TAG" > "$LAST_TAG_FILE"
+          LATEST="${{ needs.check-upstream.outputs.latest_tag }}"
+          PREV="${{ needs.check-upstream.outputs.prev_tag }}"
 
-          git add "$CHECKLIST_FILE" "$LAST_TAG_FILE"
+          echo "$LATEST" > "$LAST_TAG_FILE"
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-            exit 0
+          COMMIT_MAP_DIR=".github/upstream-commits"
+          mkdir -p "$COMMIT_MAP_DIR"
+          cp /tmp/commits.json "$COMMIT_MAP_DIR/${PREV}..${LATEST}.json"
+
+          git add "$LAST_TAG_FILE" "$COMMIT_MAP_DIR/"
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: track upstream $LATEST"
+            git push
           fi
 
-          TAGS=$(cat /tmp/new-releases.json | jq -r '[.[].tag] | join(", ")')
-          git commit -m "chore: update upstream merge checklist ($TAGS)"
-          git push
-
-      - name: Create summary issue (deduplicated)
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAGS=$(cat /tmp/new-releases.json | jq -r '[.[].tag] | join(", ")')
-
-          # 去重：检查是否已存在包含相同 release 标签的 open issue
-          # 用第一个 tag 作为搜索关键词（同一批 release 的 issue 标题包含所有 tags）
-          FIRST_TAG=$(cat /tmp/new-releases.json | jq -r '.[0].tag')
-          EXISTING=$(gh issue list --label "upstream" --state open --search "$FIRST_TAG in:title" --json number --jq 'length')
-
-          if [ "$EXISTING" -gt 0 ]; then
-            echo "Issue already exists for release $FIRST_TAG, skipping creation"
-            exit 0
-          fi
-
-          MERGE_COUNT=$(grep -c '⬜' "$CHECKLIST_FILE" 2>/dev/null || echo "0")
-          OPTIONAL_COUNT=$(grep -c '🔲' "$CHECKLIST_FILE" 2>/dev/null || echo "0")
-
-          if [ "$MERGE_COUNT" -gt 0 ] || [ "$OPTIONAL_COUNT" -gt 0 ]; then
-            printf '%s\n' \
-              "## 上游新 Release 分析" \
-              "" \
-              "上游发布了新版本: **$TAGS**" \
-              "" \
-              "### 自动分析结果" \
-              "- 🔴 需要合并: **${MERGE_COUNT}** 项" \
-              "- 🔵 可选合并: **${OPTIONAL_COUNT}** 项" \
-              "" \
-              "### 下一步" \
-              "1. 查看 [UPSTREAM_MERGE_CHECKLIST.md](../blob/main/UPSTREAM_MERGE_CHECKLIST.md) 中新增的条目" \
-              "2. 使用 AI Agent 逐条处理合并" \
-              "3. 处理完成后标记 ✅" \
-              "" \
-              "### 优先级建议" \
-              "优先处理 P0 (安全) 和 P1 (关键修复) 条目。" \
-              > /tmp/issue-body.md
-
-            # 确保 label 存在（不存在则创建）
-            gh label create upstream --description "上游变更追踪" --color "0075ca" 2>/dev/null || true
-            gh label create merge-needed --description "需要合并的上游变更" --color "d93f0b" 2>/dev/null || true
-
-            gh issue create \
-              --title "上游更新: $TAGS - ${MERGE_COUNT} 项需合并, ${OPTIONAL_COUNT} 项可选" \
-              --body-file /tmp/issue-body.md \
-              --label "upstream,merge-needed"
-          fi
+  # ================================================================
+  # Job 3: 自动 cherry-pick P0+P1 并创建 PR
+  # ================================================================
+  auto-cherry-pick:
+    needs: [check-upstream, extract-and-notify]
+    if: ${{ fromJSON(needs.extract-and-notify.outputs.merge_count) > 0 }}
+    uses: ./.github/workflows/upstream-cherry-pick.yml
+    with:
+      from_tag: ${{ needs.check-upstream.outputs.prev_tag }}
+      to_tag: ${{ needs.check-upstream.outputs.latest_tag }}
+      priority: 'P0,P1'
+      dry_run: false
+      skip_build: true
+      issue_number: ${{ needs.extract-and-notify.outputs.issue_number }}
+    secrets: inherit
