@@ -1,6 +1,6 @@
 {
   "name": "@openclaw-cn/feishu",
-  "version": "0.1.5",
+  "version": "0.1.5-fix.2",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

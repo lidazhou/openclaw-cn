@@ -1,6 +1,6 @@
 {
   "name": "@clawdbot/whatsapp",
-  "version": "0.1.5",
+  "version": "0.1.5-fix.2",
   "type": "module",
   "description": "Clawdbot WhatsApp channel plugin",
   "clawdbot": {

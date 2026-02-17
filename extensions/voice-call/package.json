@@ -1,6 +1,6 @@
 {
   "name": "@clawdbot/voice-call",
-  "version": "0.1.5",
+  "version": "0.1.5-fix.2",
   "type": "module",
   "description": "Clawdbot voice-call plugin",
   "dependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "@clawdbot/tlon",
-  "version": "0.1.5",
+  "version": "0.1.5-fix.2",
   "type": "module",
   "description": "Clawdbot Tlon/Urbit channel plugin",
   "clawdbot": {

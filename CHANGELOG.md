@@ -2,6 +2,17 @@
 
 Docs: https://docs.clawd.bot
 
+## 0.1.5-fix.2
+
+### 🐛 Bug 修复
+
+- **Control UI 网关 Token 修复**：修复首次安装后打开带 Token 的仪表盘 URL 时，Token 未被持久化导致网关连接报 `unauthorized: gateway token missing (1008)` 的问题
+- **MiniMax API Key 认证修复**：修复手动配置 MiniMax API Key 后认证失败的问题——向导错误地将 API Key 用户路由到仅接受 OAuth Token 的 Anthropic 兼容端点 (`api.minimax.io/anthropic`)，现已切换到正确的 OpenAI 兼容端点 (`api.minimax.chat/v1`)
+
+### ✨ 功能改进
+
+- **MiniMax 全模型支持**：隐式 Provider 和模型目录补全所有 MiniMax 模型（M2.5、M2.5-highspeed、M2.1-highspeed、M2）
+
 ## 0.1.5
 
 > 🔒 **安全加固**：同步上游 73 项安全修复（P0-A + P0-B + P0-C），覆盖 v2026.2.1 ~ v2026.2.14 全部安全补丁。
