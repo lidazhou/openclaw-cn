@@ -166,6 +166,10 @@ jobs:
           git config user.name "upstream-merge[bot]"
           git config user.email "bot@openclaw-cn.dev"
 
+          # 清理 extract 步骤产生的文件，确保工作区干净
+          git checkout -- . 2>/dev/null || true
+          git clean -fd .github/upstream-commits/ 2>/dev/null || true
+
           chmod +x scripts/upstream-cherry-pick.sh
 
           ARGS="--map /tmp/extract-result.json --priority ${{ inputs.priority }}"
@@ -173,7 +177,12 @@ jobs:
             ARGS="$ARGS --skip-build"
           fi
 
+          # 不让 cherry-pick 失败阻止后续步骤
+          set +e
           ./scripts/upstream-cherry-pick.sh $ARGS 2>&1 | tee /tmp/cherry-pick.log
+          PICK_EXIT=$?
+          set -e
+          echo "pick_exit=$PICK_EXIT" >> "$GITHUB_OUTPUT"
 
           # 收集结果
           BRANCH=$(git branch --show-current)
@@ -286,6 +295,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FAILED=$(grep -oP '❌ 失败: \K[0-9]+' /tmp/cherry-pick.log 2>/dev/null || echo "0")
+          PICK_EXIT="${{ steps.pick.outputs.pick_exit }}"
+
+          # 兜底：如果 cherry-pick.sh 异常退出（如工作区脏）且未产生统计，
+          # 检查 extract 中 MERGE commit 数量作为冲突数
+          if [ "$FAILED" = "0" ] && [ "${PICK_EXIT:-0}" != "0" ]; then
+            echo "⚠️ cherry-pick.sh 异常退出 (code=$PICK_EXIT)，从 extract 结果估算冲突数"
+            FAILED=$(jq '[.[] | select(.action=="MERGE")] | length' /tmp/extract-result.json 2>/dev/null || echo "0")
+            echo "   估算冲突 commit: $FAILED"
+          fi
 
           if [ "$FAILED" -gt 0 ]; then
             echo "🤖 检测到 $FAILED 个冲突 commit，触发 Copilot Agent 处理..."
