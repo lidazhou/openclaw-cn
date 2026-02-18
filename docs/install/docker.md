@@ -745,17 +745,41 @@ docker pull jiulingyun803/openclaw-cn:latest
 
 #### 权限错误
 
-如果遇到权限错误，确保当前用户被添加到 `docker` 组：
+**类型 1：无法连接 Docker daemon（套接字权限不足）**
 
+症状：
+```
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock
+```
+
+解决（Linux）：
 ```bash
-# 添加当前用户到 docker 组
+# 将当前用户添加到 docker 组
 sudo usermod -aG docker $USER
 
-# 刷新组成员关系（重新登录或运行）
+# 刷新组成员关系（无需重启）
 newgrp docker
 
 # 验证
 docker ps
+```
+
+> `newgrp docker` 仅对当前终端生效；永久生效需退出重新登录。macOS/Windows 上请确认 Docker Desktop 正在运行。
+
+**类型 2：容器内文件权限不足（EACCES）**
+
+症状：
+```
+Error: EACCES: permission denied, mkdir '/home/node/.openclaw/...'
+```
+
+原因：宿主机挂载目录由 root 创建，但容器以 `node:node`（UID 1000）运行，无写权限。
+
+解决：
+```bash
+# 创建目录并设置正确所有者
+mkdir -p ./data/.openclaw ./data/clawd
+chown -R 1000:1000 ./data
 ```
 
 ### 更多信息

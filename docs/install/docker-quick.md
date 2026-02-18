@@ -319,7 +319,35 @@ sudo netstat -ltnp | grep 18789
 # 编辑 .env，将端口改为其他（如 18790）
 ```
 
-### 问题 2：权限拒绝（Permission Denied）
+### 问题 2：无法运行 Docker 命令（Docker 套接字权限不足）
+
+**症状：** 运行 `docker compose` 或 `docker ps` 时报错：
+
+```
+permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock
+```
+
+**原因：** 当前用户不在 `docker` 用户组，无法访问 Docker daemon 套接字。
+
+**解决（Linux）：**
+```bash
+# 将当前用户添加到 docker 组
+sudo usermod -aG docker $USER
+
+# 刷新组成员关系（无需重启）
+newgrp docker
+
+# 验证是否生效
+docker ps
+```
+
+> **说明：** `newgrp docker` 只对当前终端会话生效。若想永久生效，完全退出再重新登录，或重启系统。
+
+> **macOS / Windows：** 通常不会出现此问题，因为 Docker Desktop 已内置权限管理。若仍报错，请确认 Docker Desktop 正在运行。
+
+---
+
+### 问题 3：权限拒绝（容器文件权限）
 
 **症状：** `Error: EACCES: permission denied, mkdir '/home/node/.openclaw/...'`
 
@@ -340,7 +368,7 @@ chown -R 1000:1000 ./data
 
 > **说明：** `1000` 是官方 Node.js Docker 镜像中 `node` 用户的 UID/GID。`docker-compose.yml` 中 `user: node:node` 指定容器以该用户运行，因此宿主机挂载的目录必须对 UID 1000 可写。
 
-### 问题 3：无法访问 Web UI
+### 问题 4：无法访问 Web UI
 
 **症状：** 浏览器访问 `http://127.0.0.1:18789` 无响应
 
@@ -357,7 +385,7 @@ docker compose logs openclaw-cn-gateway
 # 如果改了端口，访问对应的新端口
 ```
 
-### 问题 4：配置向导卡住
+### 问题 5：配置向导卡住
 
 **症状：** `docker compose run --rm openclaw-cn-cli onboard` 无反应
 
